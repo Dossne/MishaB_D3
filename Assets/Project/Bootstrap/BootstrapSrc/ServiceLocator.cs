@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RainbowTower.MainUi;
 using UnityEngine;
 
 namespace RainbowTower.Bootstrap
@@ -8,11 +9,13 @@ namespace RainbowTower.Bootstrap
     public sealed class ServiceLocator : MonoBehaviour
     {
         [SerializeField] private ConfigurationProvider configurationProvider;
+        [SerializeField] private MainUiProvider mainUiProvider;
 
         private readonly Dictionary<Type, object> services = new();
         private readonly List<Type> registrationOrder = new();
 
         public ConfigurationProvider ConfigurationProvider => configurationProvider;
+        public MainUiProvider MainUiProvider => mainUiProvider;
         public IReadOnlyList<Type> RegistrationOrder => registrationOrder;
 
         public void Initialize(GameManager gameManager)
@@ -28,11 +31,18 @@ namespace RainbowTower.Bootstrap
                 return;
             }
 
+            if (mainUiProvider == null)
+            {
+                Debug.LogError("ServiceLocator requires a MainUiProvider reference.", this);
+                return;
+            }
+
             services.Clear();
             registrationOrder.Clear();
 
             Register(gameManager);
             Register(configurationProvider);
+            Register(mainUiProvider);
             Register(this);
         }
 
