@@ -12,4 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6302714b38664c4ebed03cbfd6a9eb89, type: 3}
   m_Name: ConfigurationProvider
   m_EditorClassIdentifier: 
-  featureConfigurations: []
+  gameplayFieldLayoutConfig: {fileID: 11400000, guid: a4e6408d8f5548b6af5c3196cab698d0, type: 2}
+  featureConfigurations:
+  - {fileID: 11400000, guid: a4e6408d8f5548b6af5c3196cab698d0, type: 2}

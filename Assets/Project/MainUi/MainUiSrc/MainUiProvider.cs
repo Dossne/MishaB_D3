@@ -37,6 +37,19 @@ namespace RainbowTower.MainUi
         public TMP_Text HpLabel => hpLabel;
         public TMP_Text WaveLabel => waveLabel;
 
+        public void SetHudValues(int currentHp, int maxHp, int currentWave, int totalWaves)
+        {
+            if (hpLabel != null)
+            {
+                hpLabel.text = $"HP {currentHp}/{maxHp}";
+            }
+
+            if (waveLabel != null)
+            {
+                waveLabel.text = $"Wave {currentWave}/{totalWaves}";
+            }
+        }
+
         private void Awake()
         {
             EnsureCanvasSetup();
@@ -104,23 +117,28 @@ namespace RainbowTower.MainUi
             var topHudPanel = CreatePanel(
                 "TopHudPanel",
                 hudParent,
-                new Color(0.11f, 0.13f, 0.22f, 0.88f),
+                new Color(0f, 0f, 0f, 0f),
                 new Vector2(0f, 1f),
                 new Vector2(1f, 1f),
                 new Vector2(OuterMargin, -(OuterMargin + TopHudHeight)),
                 new Vector2(-OuterMargin, -OuterMargin));
 
             var layoutGroup = topHudPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layoutGroup.padding = new RectOffset(36, 36, 18, 18);
-            layoutGroup.spacing = 24f;
+            layoutGroup.padding = new RectOffset(0, 0, 12, 12);
+            layoutGroup.spacing = 20f;
             layoutGroup.childAlignment = TextAnchor.MiddleCenter;
             layoutGroup.childControlWidth = true;
             layoutGroup.childControlHeight = true;
-            layoutGroup.childForceExpandWidth = true;
+            layoutGroup.childForceExpandWidth = false;
             layoutGroup.childForceExpandHeight = true;
 
-            hpLabel = CreateStretchText("HpLabel", topHudPanel, "HP: 10 / 10", 46f);
-            waveLabel = CreateStretchText("WaveLabel", topHudPanel, "Wave: 1", 46f);
+            var wavePanel = CreateLayoutPanel("WavePanel", topHudPanel, new Color(0.95f, 0.68f, 0.12f, 0.95f), 1f, 0f);
+            waveLabel = CreateStretchText("WaveLabel", wavePanel, "Wave 1/10", 52f);
+            waveLabel.color = new Color(0.98f, 0.97f, 0.88f, 1f);
+
+            var hpPanel = CreateLayoutPanel("HpPanel", topHudPanel, new Color(0.63f, 0.32f, 0.08f, 0.95f), 0f, 280f);
+            hpLabel = CreateStretchText("HpLabel", hpPanel, "HP 25/30", 46f);
+            hpLabel.color = new Color(1f, 0.95f, 0.84f, 1f);
         }
 
         private void BuildCrystalShelf()
@@ -133,7 +151,7 @@ namespace RainbowTower.MainUi
             var shelfPanel = CreatePanel(
                 "CrystalShelfPanel",
                 hudParent,
-                new Color(0.16f, 0.09f, 0.21f, 0.92f),
+                new Color(0.34f, 0.2f, 0.1f, 0.96f),
                 new Vector2(0f, 0f),
                 new Vector2(1f, 0f),
                 new Vector2(OuterMargin, OuterMargin),
@@ -143,7 +161,7 @@ namespace RainbowTower.MainUi
                 "ShelfTitle",
                 shelfPanel,
                 "Crystal Shelf",
-                42f,
+                38f,
                 new Vector2(0f, 1f),
                 new Vector2(1f, 1f),
                 new Vector2(20f, -(20f + ShelfTitleHeight)),
@@ -198,6 +216,30 @@ namespace RainbowTower.MainUi
 
             var image = panelObject.GetComponent<Image>();
             image.color = backgroundColor;
+
+            return panelTransform;
+        }
+
+        private RectTransform CreateLayoutPanel(
+            string objectName,
+            RectTransform parent,
+            Color backgroundColor,
+            float flexibleWidth,
+            float preferredWidth)
+        {
+            var panelTransform = CreatePanel(
+                objectName,
+                parent,
+                backgroundColor,
+                Vector2.zero,
+                Vector2.one,
+                Vector2.zero,
+                Vector2.zero);
+
+            var layoutElement = panelTransform.gameObject.AddComponent<LayoutElement>();
+            layoutElement.flexibleWidth = flexibleWidth;
+            layoutElement.preferredWidth = preferredWidth;
+            layoutElement.minHeight = 0f;
 
             return panelTransform;
         }
@@ -283,7 +325,7 @@ namespace RainbowTower.MainUi
             layoutElement.preferredHeight = 0f;
 
             var image = slotObject.GetComponent<Image>();
-            image.color = GetCrystalColor(crystalName);
+            image.color = Color.Lerp(GetCrystalColor(crystalName), new Color(0.3f, 0.18f, 0.08f, 1f), 0.22f);
 
             var labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
             var labelTransform = (RectTransform)labelObject.transform;
@@ -322,6 +364,18 @@ namespace RainbowTower.MainUi
 
             var nestedChild = root.Find($"TopHudPanel/{childName}");
             if (nestedChild != null && nestedChild.TryGetComponent<TMP_Text>(out textComponent))
+            {
+                return textComponent;
+            }
+
+            var deepChild = root.Find($"TopHudPanel/WavePanel/{childName}");
+            if (deepChild != null && deepChild.TryGetComponent<TMP_Text>(out textComponent))
+            {
+                return textComponent;
+            }
+
+            deepChild = root.Find($"TopHudPanel/HpPanel/{childName}");
+            if (deepChild != null && deepChild.TryGetComponent<TMP_Text>(out textComponent))
             {
                 return textComponent;
             }

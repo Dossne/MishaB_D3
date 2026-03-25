@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RainbowTower.GameplayField;
 using UnityEngine;
 
 namespace RainbowTower.Bootstrap
@@ -26,6 +27,7 @@ namespace RainbowTower.Bootstrap
             }
 
             serviceLocator.Initialize(this);
+            InitializeSceneProviders();
             CreateRuntimeManagers();
             InitializeRuntimeManagers();
         }
@@ -71,6 +73,14 @@ namespace RainbowTower.Bootstrap
             }
 
             runtimeManagers.Add(runtimeManager);
+        }
+
+        private void InitializeSceneProviders()
+        {
+            if (serviceLocator.TryGet<GameplayFieldProvider>(out var gameplayFieldProvider))
+            {
+                gameplayFieldProvider.Initialize(serviceLocator);
+            }
         }
 
         private void CreateRuntimeManagers()

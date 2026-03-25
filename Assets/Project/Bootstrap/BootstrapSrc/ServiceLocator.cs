@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RainbowTower.GameplayField;
 using RainbowTower.MainUi;
 using UnityEngine;
 
@@ -10,12 +11,14 @@ namespace RainbowTower.Bootstrap
     {
         [SerializeField] private ConfigurationProvider configurationProvider;
         [SerializeField] private MainUiProvider mainUiProvider;
+        [SerializeField] private GameplayFieldProvider gameplayFieldProvider;
 
         private readonly Dictionary<Type, object> services = new();
         private readonly List<Type> registrationOrder = new();
 
         public ConfigurationProvider ConfigurationProvider => configurationProvider;
         public MainUiProvider MainUiProvider => mainUiProvider;
+        public GameplayFieldProvider GameplayFieldProvider => gameplayFieldProvider;
         public IReadOnlyList<Type> RegistrationOrder => registrationOrder;
 
         public void Initialize(GameManager gameManager)
@@ -37,12 +40,19 @@ namespace RainbowTower.Bootstrap
                 return;
             }
 
+            if (gameplayFieldProvider == null)
+            {
+                Debug.LogError("ServiceLocator requires a GameplayFieldProvider reference.", this);
+                return;
+            }
+
             services.Clear();
             registrationOrder.Clear();
 
             Register(gameManager);
             Register(configurationProvider);
             Register(mainUiProvider);
+            Register(gameplayFieldProvider);
             Register(this);
         }
 
