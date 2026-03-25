@@ -40,7 +40,7 @@ namespace RainbowTower.TowerSystem
                 return;
             }
 
-            shotTimer = towerConfig.ShotIntervalSeconds;
+            shotTimer = GetCurrentShotInterval();
             isReady = true;
         }
 
@@ -51,13 +51,19 @@ namespace RainbowTower.TowerSystem
                 return;
             }
 
+            var currentShotInterval = GetCurrentShotInterval();
+            if (shotTimer > currentShotInterval)
+            {
+                shotTimer = currentShotInterval;
+            }
+
             shotTimer -= deltaTime;
             if (shotTimer > 0f)
             {
                 return;
             }
 
-            shotTimer = towerConfig.ShotIntervalSeconds;
+            shotTimer = currentShotInterval;
 
             if (!enemyRuntimeManager.TryGetEnemyClosestToExit(out var targetEnemy))
             {
@@ -91,6 +97,12 @@ namespace RainbowTower.TowerSystem
             shotTimer = 0f;
             towerConfig = null;
         }
+
+        private float GetCurrentShotInterval()
+        {
+            var unlockedCrystalCount = Mathf.Max(1, crystalRuntimeManager.GetUnlockedBaseCrystalCount());
+            var baseInterval = Mathf.Max(0.1f, towerConfig.ShotIntervalSeconds);
+            return baseInterval / unlockedCrystalCount;
+        }
     }
 }
-

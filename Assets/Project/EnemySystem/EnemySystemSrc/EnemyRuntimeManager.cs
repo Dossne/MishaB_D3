@@ -50,7 +50,7 @@ namespace RainbowTower.EnemySystem
             isReady = true;
         }
 
-        public EnemyView SpawnEnemy(Action<EnemyView> onReachedExit)
+        public EnemyView SpawnEnemy(int hpBonus, Action<EnemyView> onReachedExit)
         {
             if (!isReady)
             {
@@ -63,7 +63,7 @@ namespace RainbowTower.EnemySystem
                 enemyConfig.MoveSpeed,
                 enemyConfig.EnemyTint,
                 enemyConfig.EnemyScale,
-                enemyConfig.BaseHp,
+                Mathf.Max(1, enemyConfig.BaseHp + Mathf.Max(0, hpBonus)),
                 enemyConfig.BaseRewardXp,
                 escapedEnemy =>
                 {
@@ -148,4 +148,3 @@ namespace RainbowTower.EnemySystem
         }
     }
 }
-

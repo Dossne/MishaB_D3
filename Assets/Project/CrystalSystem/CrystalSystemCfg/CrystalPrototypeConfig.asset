@@ -14,21 +14,59 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   baseCrystalDefinitions:
   - color: 0
+    startUnlocked: 1
+    unlockCost: 0
+    requiredUnlockedColors: []
     startLevel: 1
     levels:
     - generationPerSecond: 1
       manaCap: 10
-      damage: 1
+      damage: 2
+      upgradeCost: 4
+    - generationPerSecond: 1.4
+      manaCap: 14
+      damage: 3
+      upgradeCost: 12
+    - generationPerSecond: 1.9
+      manaCap: 20
+      damage: 4
+      upgradeCost: 0
   - color: 1
+    startUnlocked: 0
+    unlockCost: 5
+    requiredUnlockedColors:
+    - 0
     startLevel: 1
     levels:
     - generationPerSecond: 1
       manaCap: 10
-      damage: 1
+      damage: 2
+      upgradeCost: 8
+    - generationPerSecond: 1.35
+      manaCap: 14
+      damage: 3
+      upgradeCost: 14
+    - generationPerSecond: 1.8
+      manaCap: 20
+      damage: 4
+      upgradeCost: 0
   - color: 2
+    startUnlocked: 0
+    unlockCost: 12
+    requiredUnlockedColors:
+    - 1
     startLevel: 1
     levels:
     - generationPerSecond: 1
       manaCap: 10
-      damage: 1
+      damage: 2
+      upgradeCost: 10
+    - generationPerSecond: 1.3
+      manaCap: 14
+      damage: 3
+      upgradeCost: 16
+    - generationPerSecond: 1.7
+      manaCap: 20
+      damage: 5
+      upgradeCost: 0
 

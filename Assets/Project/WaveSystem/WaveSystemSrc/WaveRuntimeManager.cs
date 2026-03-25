@@ -134,7 +134,8 @@ namespace RainbowTower.WaveSystem
                 return;
             }
 
-            var enemy = enemyRuntimeManager.SpawnEnemy(OnEnemyReachedExit);
+            var hpBonus = Mathf.Max(0, (currentWave - 1) * waveConfig.EnemyHpAddedPerWave);
+            var enemy = enemyRuntimeManager.SpawnEnemy(hpBonus, OnEnemyReachedExit);
             if (enemy != null)
             {
                 spawnedInWave++;

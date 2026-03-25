@@ -38,6 +38,9 @@ namespace RainbowTower.CrystalSystem
         public sealed class BaseCrystalDefinition
         {
             [SerializeField] private ManaColor color;
+            [SerializeField] private bool startUnlocked = true;
+            [SerializeField, Min(0)] private int unlockCost = 5;
+            [SerializeField] private ManaColor[] requiredUnlockedColors = Array.Empty<ManaColor>();
             [SerializeField, Min(1)] private int startLevel = 1;
             [SerializeField] private CrystalLevelData[] levels =
             {
@@ -50,6 +53,9 @@ namespace RainbowTower.CrystalSystem
             }
 
             public ManaColor Color => color;
+            public bool StartUnlocked => startUnlocked;
+            public int UnlockCost => Mathf.Max(0, unlockCost);
+            public ManaColor[] RequiredUnlockedColors => requiredUnlockedColors;
             public int StartLevel => Mathf.Max(1, startLevel);
             public CrystalLevelData[] Levels => levels;
         }
@@ -60,11 +66,12 @@ namespace RainbowTower.CrystalSystem
             [SerializeField, Min(0.1f)] private float generationPerSecond = 1f;
             [SerializeField, Min(1)] private int manaCap = 10;
             [SerializeField, Min(1)] private int damage = 1;
+            [SerializeField, Min(0)] private int upgradeCost = 5;
 
             public float GenerationPerSecond => Mathf.Max(0.1f, generationPerSecond);
             public int ManaCap => Mathf.Max(1, manaCap);
             public int Damage => Mathf.Max(1, damage);
+            public int UpgradeCost => Mathf.Max(0, upgradeCost);
         }
     }
 }
-

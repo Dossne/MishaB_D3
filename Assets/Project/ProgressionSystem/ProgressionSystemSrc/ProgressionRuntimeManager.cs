@@ -19,6 +19,22 @@ namespace RainbowTower.ProgressionSystem
             CurrentXp += amount;
         }
 
+        public bool CanAfford(int cost)
+        {
+            return cost > 0 && CurrentXp >= cost;
+        }
+
+        public bool TrySpendXp(int cost)
+        {
+            if (!CanAfford(cost))
+            {
+                return false;
+            }
+
+            CurrentXp -= cost;
+            return true;
+        }
+
         public void Initialize(ServiceLocator serviceLocator)
         {
             progressionConfig = serviceLocator.ConfigurationProvider.GetConfiguration<ProgressionPrototypeConfig>();
@@ -47,4 +63,3 @@ namespace RainbowTower.ProgressionSystem
         }
     }
 }
-

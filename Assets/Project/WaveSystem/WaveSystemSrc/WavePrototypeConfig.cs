@@ -14,6 +14,7 @@ namespace RainbowTower.WaveSystem
         [SerializeField] private int baseEnemiesPerWave = 4;
         [SerializeField] private int enemiesAddedPerWave = 1;
         [SerializeField] private float spawnInterval = 0.9f;
+        [SerializeField] private int enemyHpAddedPerWave = 1;
 
         public int StartPlayerHp => startPlayerHp;
         public int TotalWaves => totalWaves;
@@ -22,5 +23,6 @@ namespace RainbowTower.WaveSystem
         public int BaseEnemiesPerWave => baseEnemiesPerWave;
         public int EnemiesAddedPerWave => enemiesAddedPerWave;
         public float SpawnInterval => spawnInterval;
+        public int EnemyHpAddedPerWave => Mathf.Max(0, enemyHpAddedPerWave);
     }
 }

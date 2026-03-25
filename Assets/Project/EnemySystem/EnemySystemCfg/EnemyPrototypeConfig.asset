@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyPrefab: {fileID: 500000000000000003, guid: 63123869bb7f461d8229a5fc0fd3d857, type: 3}
   moveSpeed: 1.35
-  baseHp: 5
+  baseHp: 2
   baseRewardXp: 1
   enemyTint: {r: 0.22, g: 0.74, b: 0.29, a: 1}
   enemyScale: {x: 6, y: 6}
+
+

@@ -118,6 +118,7 @@ namespace RainbowTower.MainUi
         private void Awake()
         {
             EnsureCanvasSetup();
+            EnsureEventSystem();
             EnsureHierarchy();
             HideDefeatPopup();
         }
@@ -553,4 +554,5 @@ namespace RainbowTower.MainUi
         }
     }
 }
+
 

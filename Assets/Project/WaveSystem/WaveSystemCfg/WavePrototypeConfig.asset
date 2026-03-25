@@ -19,3 +19,4 @@ MonoBehaviour:
   baseEnemiesPerWave: 4
   enemiesAddedPerWave: 1
   spawnInterval: 0.9
+  enemyHpAddedPerWave: 1
