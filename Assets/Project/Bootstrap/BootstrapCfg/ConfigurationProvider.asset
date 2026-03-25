@@ -13,5 +13,9 @@ MonoBehaviour:
   m_Name: ConfigurationProvider
   m_EditorClassIdentifier: 
   gameplayFieldLayoutConfig: {fileID: 11400000, guid: a4e6408d8f5548b6af5c3196cab698d0, type: 2}
+  enemyPrototypeConfig: {fileID: 11400000, guid: fcf1280c88b14a49af27c4181454294e, type: 2}
+  wavePrototypeConfig: {fileID: 11400000, guid: 72ceb5ba8fbd4cf8b2aacf457cf4c35d, type: 2}
   featureConfigurations:
   - {fileID: 11400000, guid: a4e6408d8f5548b6af5c3196cab698d0, type: 2}
+  - {fileID: 11400000, guid: fcf1280c88b14a49af27c4181454294e, type: 2}
+  - {fileID: 11400000, guid: 72ceb5ba8fbd4cf8b2aacf457cf4c35d, type: 2}

@@ -101,6 +101,7 @@ Do not over-engineer early systems unless explicitly requested.
 - If changing a prefab or scene, keep the scope tight.
 - Do not use Editor-only APIs to load gameplay resources or assets at runtime.
 - For runtime asset access, use serialized references in scene MonoBehaviours, prefabs, or ScriptableObjects obtained through `ConfigurationProvider`.
+- Use the Unity Input System package for runtime input and UI event modules; do not use the legacy UnityEngine.Input/StandaloneInputModule path.
 
 ## Verification
 

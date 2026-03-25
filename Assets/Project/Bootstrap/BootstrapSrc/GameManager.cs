@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using RainbowTower.EnemySystem;
 using RainbowTower.GameplayField;
+using RainbowTower.WaveSystem;
 using UnityEngine;
 
 namespace RainbowTower.Bootstrap
@@ -86,6 +88,12 @@ namespace RainbowTower.Bootstrap
         private void CreateRuntimeManagers()
         {
             runtimeManagers.Clear();
+
+            var enemyRuntimeManager = new EnemyRuntimeManager();
+            var waveRuntimeManager = new WaveRuntimeManager(enemyRuntimeManager);
+
+            RegisterRuntimeManager(enemyRuntimeManager);
+            RegisterRuntimeManager(waveRuntimeManager);
         }
 
         private void InitializeRuntimeManagers()

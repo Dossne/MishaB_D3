@@ -1,5 +1,8 @@
+﻿using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 namespace RainbowTower.MainUi
@@ -31,6 +34,11 @@ namespace RainbowTower.MainUi
         [SerializeField] private TMP_Text hpLabel;
         [SerializeField] private TMP_Text waveLabel;
 
+        [Header("Defeat Popup")]
+        [SerializeField] private RectTransform defeatPopupRoot;
+        [SerializeField] private TMP_Text defeatTitleLabel;
+        [SerializeField] private Button restartButton;
+
         public RectTransform FloatingTextParent => floatingTextParent;
         public RectTransform HudParent => hudParent;
         public RectTransform PopupParent => popupParent;
@@ -50,10 +58,45 @@ namespace RainbowTower.MainUi
             }
         }
 
+        public void ShowDefeatPopup(Action onRestart)
+        {
+            EnsureEventSystem();
+            EnsureDefeatPopup();
+            if (defeatPopupRoot == null)
+            {
+                return;
+            }
+
+            defeatPopupRoot.gameObject.SetActive(true);
+
+            if (defeatTitleLabel != null)
+            {
+                defeatTitleLabel.text = "Defeat";
+            }
+
+            if (restartButton != null)
+            {
+                restartButton.onClick.RemoveAllListeners();
+                restartButton.onClick.AddListener(() =>
+                {
+                    onRestart?.Invoke();
+                });
+            }
+        }
+
+        public void HideDefeatPopup()
+        {
+            if (defeatPopupRoot != null)
+            {
+                defeatPopupRoot.gameObject.SetActive(false);
+            }
+        }
+
         private void Awake()
         {
             EnsureCanvasSetup();
             EnsureHierarchy();
+            HideDefeatPopup();
         }
 
         private void EnsureCanvasSetup()
@@ -86,6 +129,17 @@ namespace RainbowTower.MainUi
 
             BuildHud();
             BuildCrystalShelf();
+        }
+
+        private void EnsureEventSystem()
+        {
+            if (EventSystem.current != null)
+            {
+                return;
+            }
+
+            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+            DontDestroyOnLoad(eventSystemObject);
         }
 
         private RectTransform EnsureChildRoot(RectTransform existingRoot, string rootName)
@@ -188,6 +242,66 @@ namespace RainbowTower.MainUi
             CreateCrystalRow("TopRow", rowsTransform, "Red", "Green", "Blue");
             CreateCrystalRow("MiddleRow", rowsTransform, "Yellow", "Magenta", "Cyan");
             CreateCrystalRow("BottomRow", rowsTransform, "White");
+        }
+
+        private void EnsureDefeatPopup()
+        {
+            if (defeatPopupRoot != null)
+            {
+                return;
+            }
+
+            defeatPopupRoot = CreatePanel(
+                "DefeatPopup",
+                popupParent,
+                new Color(0f, 0f, 0f, 0.74f),
+                new Vector2(0f, 0f),
+                new Vector2(1f, 1f),
+                Vector2.zero,
+                Vector2.zero);
+
+            var window = CreatePanel(
+                "Window",
+                defeatPopupRoot,
+                new Color(0.27f, 0.16f, 0.12f, 0.96f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(-300f, -180f),
+                new Vector2(300f, 180f));
+
+            defeatTitleLabel = CreateAnchoredText(
+                "DefeatLabel",
+                window,
+                "Defeat",
+                76f,
+                new Vector2(0f, 0.5f),
+                new Vector2(1f, 1f),
+                new Vector2(30f, -140f),
+                new Vector2(-30f, -30f));
+            defeatTitleLabel.color = new Color(1f, 0.78f, 0.42f, 1f);
+
+            var buttonTransform = CreatePanel(
+                "RestartButton",
+                window,
+                new Color(0.92f, 0.56f, 0.2f, 1f),
+                new Vector2(0.5f, 0f),
+                new Vector2(0.5f, 0f),
+                new Vector2(-190f, 30f),
+                new Vector2(190f, 112f));
+
+            restartButton = buttonTransform.gameObject.AddComponent<Button>();
+            var buttonLabel = CreateAnchoredText(
+                "Label",
+                buttonTransform,
+                "Restart",
+                52f,
+                Vector2.zero,
+                Vector2.one,
+                new Vector2(0f, 0f),
+                new Vector2(0f, 0f));
+            buttonLabel.color = new Color(0.24f, 0.13f, 0.08f, 1f);
+
+            defeatPopupRoot.gameObject.SetActive(false);
         }
 
         private void AssignTopHudReferences()
@@ -399,3 +513,5 @@ namespace RainbowTower.MainUi
         }
     }
 }
+
+
