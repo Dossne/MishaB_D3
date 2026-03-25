@@ -99,6 +99,8 @@ Do not over-engineer early systems unless explicitly requested.
 - Avoid unnecessary serialization churn.
 - Avoid changing import settings, sorting layers, tags, or project-wide settings unless required.
 - If changing a prefab or scene, keep the scope tight.
+- Do not use Editor-only APIs to load gameplay resources or assets at runtime.
+- For runtime asset access, use serialized references in scene MonoBehaviours, prefabs, or ScriptableObjects obtained through `ConfigurationProvider`.
 
 ## Verification
 
