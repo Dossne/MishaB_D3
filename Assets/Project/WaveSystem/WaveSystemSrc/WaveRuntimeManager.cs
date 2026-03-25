@@ -1,6 +1,7 @@
 using RainbowTower.Bootstrap;
 using RainbowTower.EnemySystem;
 using RainbowTower.MainUi;
+using RainbowTower.ProgressionSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,6 +10,7 @@ namespace RainbowTower.WaveSystem
     public sealed class WaveRuntimeManager : IRuntimeManager
     {
         private readonly EnemyRuntimeManager enemyRuntimeManager;
+        private readonly ProgressionRuntimeManager progressionRuntimeManager;
 
         private WavePrototypeConfig waveConfig;
         private MainUiProvider mainUiProvider;
@@ -18,6 +20,8 @@ namespace RainbowTower.WaveSystem
         private int currentWave;
         private int enemiesToSpawnInWave;
         private int spawnedInWave;
+        private int currentWaveHpBonus;
+        private int currentWaveRewardXpBonus;
 
         private float initialDelayTimer;
         private float betweenWavesTimer;
@@ -25,11 +29,13 @@ namespace RainbowTower.WaveSystem
 
         private bool isReady;
         private bool isSpawningWave;
-        private bool isDefeated;
+        private bool isSessionEnded;
+        private bool isWaveResolved;
 
-        public WaveRuntimeManager(EnemyRuntimeManager enemyRuntimeManager)
+        public WaveRuntimeManager(EnemyRuntimeManager enemyRuntimeManager, ProgressionRuntimeManager progressionRuntimeManager)
         {
             this.enemyRuntimeManager = enemyRuntimeManager;
+            this.progressionRuntimeManager = progressionRuntimeManager;
         }
 
         public void Initialize(ServiceLocator serviceLocator)
@@ -51,14 +57,17 @@ namespace RainbowTower.WaveSystem
                 return;
             }
 
-            currentPlayerHp = Mathf.Max(1, waveConfig.StartPlayerHp);
+            currentPlayerHp = waveConfig.StartPlayerHp;
             maxPlayerHp = currentPlayerHp;
             currentWave = 0;
-            initialDelayTimer = Mathf.Max(0f, waveConfig.InitialDelay);
+            initialDelayTimer = waveConfig.InitialDelay;
             betweenWavesTimer = 0f;
             spawnTimer = 0f;
+            currentWaveHpBonus = 0;
+            currentWaveRewardXpBonus = 0;
             isSpawningWave = false;
-            isDefeated = false;
+            isSessionEnded = false;
+            isWaveResolved = false;
 
             mainUiProvider.HideDefeatPopup();
             UpdateHud();
@@ -67,7 +76,7 @@ namespace RainbowTower.WaveSystem
 
         public void Tick(float deltaTime)
         {
-            if (!isReady || isDefeated)
+            if (!isReady || isSessionEnded)
             {
                 return;
             }
@@ -94,7 +103,13 @@ namespace RainbowTower.WaveSystem
                 return;
             }
 
-            if (currentWave >= waveConfig.TotalWaves)
+            if (currentWave <= 0)
+            {
+                return;
+            }
+
+            ResolveCurrentWaveIfNeeded();
+            if (isSessionEnded)
             {
                 return;
             }
@@ -114,7 +129,8 @@ namespace RainbowTower.WaveSystem
         {
             isReady = false;
             isSpawningWave = false;
-            isDefeated = false;
+            isSessionEnded = false;
+            isWaveResolved = false;
             waveConfig = null;
             mainUiProvider = null;
         }
@@ -124,7 +140,6 @@ namespace RainbowTower.WaveSystem
             if (spawnedInWave >= enemiesToSpawnInWave)
             {
                 isSpawningWave = false;
-                betweenWavesTimer = Mathf.Max(0.15f, waveConfig.TimeBetweenWaves);
                 return;
             }
 
@@ -134,30 +149,60 @@ namespace RainbowTower.WaveSystem
                 return;
             }
 
-            var hpBonus = Mathf.Max(0, (currentWave - 1) * waveConfig.EnemyHpAddedPerWave);
-            var enemy = enemyRuntimeManager.SpawnEnemy(hpBonus, OnEnemyReachedExit);
+            var enemy = enemyRuntimeManager.SpawnEnemy(currentWaveHpBonus, currentWaveRewardXpBonus, OnEnemyReachedExit);
             if (enemy != null)
             {
                 spawnedInWave++;
             }
 
-            spawnTimer = Mathf.Max(0.1f, waveConfig.SpawnInterval);
+            spawnTimer = waveConfig.GetSpawnIntervalForWave(currentWave);
         }
 
         private void StartNextWave()
         {
             currentWave++;
-            enemiesToSpawnInWave = Mathf.Max(1, waveConfig.BaseEnemiesPerWave + (currentWave - 1) * waveConfig.EnemiesAddedPerWave);
+            enemiesToSpawnInWave = waveConfig.GetEnemiesToSpawnForWave(currentWave);
             spawnedInWave = 0;
+            currentWaveHpBonus = waveConfig.GetEnemyHpBonusForWave(currentWave);
+            currentWaveRewardXpBonus = waveConfig.GetEnemyRewardXpBonusForWave(currentWave);
             spawnTimer = 0f;
             isSpawningWave = true;
+            isWaveResolved = false;
 
             UpdateHud();
         }
 
+        private void ResolveCurrentWaveIfNeeded()
+        {
+            if (isWaveResolved)
+            {
+                return;
+            }
+
+            isWaveResolved = true;
+            GrantWaveClearXp(currentWave);
+
+            if (currentWave >= waveConfig.TotalWaves)
+            {
+                CompleteSessionSuccess();
+                return;
+            }
+
+            betweenWavesTimer = waveConfig.GetTimeBetweenWavesAfter(currentWave);
+        }
+
+        private void GrantWaveClearXp(int waveNumber)
+        {
+            var reward = progressionRuntimeManager.GetWaveClearXpReward(waveNumber);
+            if (reward > 0)
+            {
+                progressionRuntimeManager.AddXp(reward);
+            }
+        }
+
         private void OnEnemyReachedExit(EnemyView escapedEnemy)
         {
-            if (isDefeated)
+            if (isSessionEnded)
             {
                 return;
             }
@@ -170,23 +215,37 @@ namespace RainbowTower.WaveSystem
                 return;
             }
 
-            isDefeated = true;
-            enemyRuntimeManager.DespawnAllEnemies();
+            CompleteSessionDefeat();
+        }
 
-            mainUiProvider.ShowDefeatPopup(() =>
-            {
-                var activeScene = SceneManager.GetActiveScene();
-                SceneManager.LoadScene(activeScene.buildIndex);
-            });
+        private void CompleteSessionDefeat()
+        {
+            isSessionEnded = true;
+            enemyRuntimeManager.DespawnAllEnemies();
+            mainUiProvider.ShowDefeatPopup(RestartCurrentScene);
+        }
+
+        private void CompleteSessionSuccess()
+        {
+            isSessionEnded = true;
+            enemyRuntimeManager.DespawnAllEnemies();
+            mainUiProvider.ShowVictoryPopup($"You survived {waveConfig.TotalWaves} waves.", RestartCurrentScene);
+        }
+
+        private void RestartCurrentScene()
+        {
+            var activeScene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(activeScene.buildIndex);
         }
 
         private void UpdateHud()
         {
+            var shownWave = currentWave <= 0 ? 1 : Mathf.Clamp(currentWave, 1, waveConfig.TotalWaves);
             mainUiProvider.SetHudValues(
                 currentPlayerHp,
                 maxPlayerHp,
-                Mathf.Max(1, currentWave == 0 ? 1 : currentWave),
-                Mathf.Max(1, waveConfig.TotalWaves));
+                shownWave,
+                waveConfig.TotalWaves);
         }
     }
 }

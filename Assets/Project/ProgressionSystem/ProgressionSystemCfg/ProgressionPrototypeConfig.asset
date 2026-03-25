@@ -13,4 +13,7 @@ MonoBehaviour:
   m_Name: ProgressionPrototypeConfig
   m_EditorClassIdentifier: 
   startXp: 0
-
+  baseWaveClearXp: 2
+  waveClearXpAddedPerWave: 1
+  waveClearXpBonusEveryWaves: 3
+  waveClearXpBonusAmount: 1

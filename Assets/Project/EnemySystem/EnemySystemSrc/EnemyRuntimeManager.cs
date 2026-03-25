@@ -50,7 +50,7 @@ namespace RainbowTower.EnemySystem
             isReady = true;
         }
 
-        public EnemyView SpawnEnemy(int hpBonus, Action<EnemyView> onReachedExit)
+        public EnemyView SpawnEnemy(int hpBonus, int rewardXpBonus, Action<EnemyView> onReachedExit)
         {
             if (!isReady)
             {
@@ -58,13 +58,15 @@ namespace RainbowTower.EnemySystem
             }
 
             var enemyView = UnityEngine.Object.Instantiate(enemyConfig.EnemyPrefab, runtimeParent);
+            var scaledRewardXp = Mathf.Max(0, enemyConfig.BaseRewardXp + Mathf.Max(0, rewardXpBonus));
+
             enemyView.Initialize(
                 cachedPathPoints,
                 enemyConfig.MoveSpeed,
                 enemyConfig.EnemyTint,
                 enemyConfig.EnemyScale,
                 Mathf.Max(1, enemyConfig.BaseHp + Mathf.Max(0, hpBonus)),
-                enemyConfig.BaseRewardXp,
+                scaledRewardXp,
                 escapedEnemy =>
                 {
                     activeEnemies.Remove(escapedEnemy);

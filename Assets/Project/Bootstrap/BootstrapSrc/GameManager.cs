@@ -99,7 +99,7 @@ namespace RainbowTower.Bootstrap
             var combatFeedbackRuntimeManager = new CombatFeedbackRuntimeManager();
             var manaRuntimeManager = new ManaRuntimeManager(crystalRuntimeManager, combatFeedbackRuntimeManager);
             var enemyRuntimeManager = new EnemyRuntimeManager();
-            var waveRuntimeManager = new WaveRuntimeManager(enemyRuntimeManager);
+            var waveRuntimeManager = new WaveRuntimeManager(enemyRuntimeManager, progressionRuntimeManager);
             var towerRuntimeManager = new TowerRuntimeManager(
                 enemyRuntimeManager,
                 manaRuntimeManager,
@@ -156,4 +156,3 @@ namespace RainbowTower.Bootstrap
         void Deinitialize();
     }
 }
-

@@ -31,6 +31,46 @@ MonoBehaviour:
     - generationPerSecond: 1.9
       manaCap: 20
       damage: 4
+      upgradeCost: 20
+    - generationPerSecond: 2.25
+      manaCap: 24
+      damage: 5
+      upgradeCost: 26
+    - generationPerSecond: 2.6
+      manaCap: 28
+      damage: 6
+      upgradeCost: 32
+    - generationPerSecond: 2.95
+      manaCap: 32
+      damage: 7
+      upgradeCost: 38
+    - generationPerSecond: 3.3
+      manaCap: 36
+      damage: 8
+      upgradeCost: 44
+    - generationPerSecond: 3.65
+      manaCap: 40
+      damage: 9
+      upgradeCost: 50
+    - generationPerSecond: 4
+      manaCap: 44
+      damage: 10
+      upgradeCost: 56
+    - generationPerSecond: 4.35
+      manaCap: 48
+      damage: 11
+      upgradeCost: 62
+    - generationPerSecond: 4.7
+      manaCap: 52
+      damage: 12
+      upgradeCost: 68
+    - generationPerSecond: 5.05
+      manaCap: 56
+      damage: 13
+      upgradeCost: 74
+    - generationPerSecond: 5.4
+      manaCap: 60
+      damage: 14
       upgradeCost: 0
   - color: 1
     startUnlocked: 0
@@ -51,6 +91,46 @@ MonoBehaviour:
     - generationPerSecond: 1.8
       manaCap: 20
       damage: 4
+      upgradeCost: 22
+    - generationPerSecond: 2.15
+      manaCap: 24
+      damage: 5
+      upgradeCost: 28
+    - generationPerSecond: 2.5
+      manaCap: 28
+      damage: 6
+      upgradeCost: 34
+    - generationPerSecond: 2.85
+      manaCap: 32
+      damage: 7
+      upgradeCost: 40
+    - generationPerSecond: 3.2
+      manaCap: 36
+      damage: 8
+      upgradeCost: 46
+    - generationPerSecond: 3.55
+      manaCap: 40
+      damage: 9
+      upgradeCost: 52
+    - generationPerSecond: 3.9
+      manaCap: 44
+      damage: 10
+      upgradeCost: 58
+    - generationPerSecond: 4.25
+      manaCap: 48
+      damage: 11
+      upgradeCost: 64
+    - generationPerSecond: 4.6
+      manaCap: 52
+      damage: 12
+      upgradeCost: 70
+    - generationPerSecond: 4.95
+      manaCap: 56
+      damage: 13
+      upgradeCost: 76
+    - generationPerSecond: 5.3
+      manaCap: 60
+      damage: 14
       upgradeCost: 0
   - color: 2
     startUnlocked: 0
@@ -71,6 +151,46 @@ MonoBehaviour:
     - generationPerSecond: 1.7
       manaCap: 20
       damage: 5
+      upgradeCost: 24
+    - generationPerSecond: 2.05
+      manaCap: 24
+      damage: 6
+      upgradeCost: 31
+    - generationPerSecond: 2.4
+      manaCap: 28
+      damage: 7
+      upgradeCost: 38
+    - generationPerSecond: 2.75
+      manaCap: 32
+      damage: 8
+      upgradeCost: 45
+    - generationPerSecond: 3.1
+      manaCap: 36
+      damage: 9
+      upgradeCost: 52
+    - generationPerSecond: 3.45
+      manaCap: 40
+      damage: 10
+      upgradeCost: 59
+    - generationPerSecond: 3.8
+      manaCap: 44
+      damage: 11
+      upgradeCost: 66
+    - generationPerSecond: 4.15
+      manaCap: 48
+      damage: 12
+      upgradeCost: 73
+    - generationPerSecond: 4.5
+      manaCap: 52
+      damage: 13
+      upgradeCost: 80
+    - generationPerSecond: 4.85
+      manaCap: 56
+      damage: 14
+      upgradeCost: 87
+    - generationPerSecond: 5.2
+      manaCap: 60
+      damage: 15
       upgradeCost: 0
   - color: 3
     startUnlocked: 0
@@ -94,6 +214,46 @@ MonoBehaviour:
     - generationPerSecond: 1.35
       manaCap: 16
       damage: 3
+      upgradeCost: 26
+    - generationPerSecond: 1.65
+      manaCap: 19
+      damage: 4
+      upgradeCost: 33
+    - generationPerSecond: 1.95
+      manaCap: 22
+      damage: 5
+      upgradeCost: 40
+    - generationPerSecond: 2.25
+      manaCap: 25
+      damage: 6
+      upgradeCost: 47
+    - generationPerSecond: 2.55
+      manaCap: 28
+      damage: 7
+      upgradeCost: 54
+    - generationPerSecond: 2.85
+      manaCap: 31
+      damage: 8
+      upgradeCost: 61
+    - generationPerSecond: 3.15
+      manaCap: 34
+      damage: 9
+      upgradeCost: 68
+    - generationPerSecond: 3.45
+      manaCap: 37
+      damage: 10
+      upgradeCost: 75
+    - generationPerSecond: 3.75
+      manaCap: 40
+      damage: 11
+      upgradeCost: 82
+    - generationPerSecond: 4.05
+      manaCap: 43
+      damage: 12
+      upgradeCost: 89
+    - generationPerSecond: 4.35
+      manaCap: 46
+      damage: 13
       upgradeCost: 0
   - color: 4
     startUnlocked: 0
@@ -117,6 +277,46 @@ MonoBehaviour:
     - generationPerSecond: 1.3
       manaCap: 16
       damage: 3
+      upgradeCost: 28
+    - generationPerSecond: 1.6
+      manaCap: 19
+      damage: 4
+      upgradeCost: 36
+    - generationPerSecond: 1.9
+      manaCap: 22
+      damage: 5
+      upgradeCost: 44
+    - generationPerSecond: 2.2
+      manaCap: 25
+      damage: 6
+      upgradeCost: 52
+    - generationPerSecond: 2.5
+      manaCap: 28
+      damage: 7
+      upgradeCost: 60
+    - generationPerSecond: 2.8
+      manaCap: 31
+      damage: 8
+      upgradeCost: 68
+    - generationPerSecond: 3.1
+      manaCap: 34
+      damage: 9
+      upgradeCost: 76
+    - generationPerSecond: 3.4
+      manaCap: 37
+      damage: 10
+      upgradeCost: 84
+    - generationPerSecond: 3.7
+      manaCap: 40
+      damage: 11
+      upgradeCost: 92
+    - generationPerSecond: 4
+      manaCap: 43
+      damage: 12
+      upgradeCost: 100
+    - generationPerSecond: 4.3
+      manaCap: 46
+      damage: 13
       upgradeCost: 0
   - color: 5
     startUnlocked: 0
@@ -140,6 +340,46 @@ MonoBehaviour:
     - generationPerSecond: 1.25
       manaCap: 16
       damage: 3
+      upgradeCost: 28
+    - generationPerSecond: 1.55
+      manaCap: 19
+      damage: 4
+      upgradeCost: 36
+    - generationPerSecond: 1.85
+      manaCap: 22
+      damage: 5
+      upgradeCost: 44
+    - generationPerSecond: 2.15
+      manaCap: 25
+      damage: 6
+      upgradeCost: 52
+    - generationPerSecond: 2.45
+      manaCap: 28
+      damage: 7
+      upgradeCost: 60
+    - generationPerSecond: 2.75
+      manaCap: 31
+      damage: 8
+      upgradeCost: 68
+    - generationPerSecond: 3.05
+      manaCap: 34
+      damage: 9
+      upgradeCost: 76
+    - generationPerSecond: 3.35
+      manaCap: 37
+      damage: 10
+      upgradeCost: 84
+    - generationPerSecond: 3.65
+      manaCap: 40
+      damage: 11
+      upgradeCost: 92
+    - generationPerSecond: 3.95
+      manaCap: 43
+      damage: 12
+      upgradeCost: 100
+    - generationPerSecond: 4.25
+      manaCap: 46
+      damage: 13
       upgradeCost: 0
   - color: 6
     startUnlocked: 0
@@ -171,4 +411,44 @@ MonoBehaviour:
     - generationPerSecond: 1
       manaCap: 12
       damage: 6
+      upgradeCost: 38
+    - generationPerSecond: 1.25
+      manaCap: 15
+      damage: 8
+      upgradeCost: 48
+    - generationPerSecond: 1.5
+      manaCap: 18
+      damage: 10
+      upgradeCost: 58
+    - generationPerSecond: 1.75
+      manaCap: 21
+      damage: 12
+      upgradeCost: 68
+    - generationPerSecond: 2
+      manaCap: 24
+      damage: 14
+      upgradeCost: 78
+    - generationPerSecond: 2.25
+      manaCap: 27
+      damage: 16
+      upgradeCost: 88
+    - generationPerSecond: 2.5
+      manaCap: 30
+      damage: 18
+      upgradeCost: 98
+    - generationPerSecond: 2.75
+      manaCap: 33
+      damage: 20
+      upgradeCost: 108
+    - generationPerSecond: 3
+      manaCap: 36
+      damage: 22
+      upgradeCost: 118
+    - generationPerSecond: 3.25
+      manaCap: 39
+      damage: 24
+      upgradeCost: 128
+    - generationPerSecond: 3.5
+      manaCap: 42
+      damage: 26
       upgradeCost: 0

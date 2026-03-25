@@ -13,10 +13,21 @@ MonoBehaviour:
   m_Name: WavePrototypeConfig
   m_EditorClassIdentifier: 
   startPlayerHp: 20
-  totalWaves: 10
+  totalWaves: 12
   initialDelay: 0.8
-  timeBetweenWaves: 1.75
   baseEnemiesPerWave: 4
   enemiesAddedPerWave: 1
-  spawnInterval: 0.9
+  enemyCountBonusEveryWaves: 3
+  enemyCountBonusAmount: 1
+  baseSpawnInterval: 0.95
+  spawnIntervalReductionPerWave: 0.05
+  minSpawnInterval: 0.45
+  baseTimeBetweenWaves: 2.3
+  timeBetweenWavesReductionPerWave: 0.12
+  minTimeBetweenWaves: 0.9
   enemyHpAddedPerWave: 1
+  enemyHpBonusEveryWaves: 2
+  enemyHpBonusAmount: 1
+  rewardXpAddedPerWave: 0
+  rewardXpBonusEveryWaves: 2
+  rewardXpBonusAmount: 1

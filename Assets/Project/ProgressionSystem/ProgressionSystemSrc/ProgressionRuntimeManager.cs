@@ -19,6 +19,11 @@ namespace RainbowTower.ProgressionSystem
             CurrentXp += amount;
         }
 
+        public int GetWaveClearXpReward(int waveNumber)
+        {
+            return progressionConfig == null ? 0 : progressionConfig.GetWaveClearXp(waveNumber);
+        }
+
         public bool CanAfford(int cost)
         {
             return cost > 0 && CurrentXp >= cost;

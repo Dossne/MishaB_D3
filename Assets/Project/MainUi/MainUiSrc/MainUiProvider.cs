@@ -47,7 +47,9 @@ namespace RainbowTower.MainUi
         [Header("Defeat Popup")]
         [SerializeField] private RectTransform defeatPopupRoot;
         [SerializeField] private TMP_Text defeatTitleLabel;
+        [SerializeField] private TMP_Text defeatMessageLabel;
         [SerializeField] private Button restartButton;
+        [SerializeField] private TMP_Text restartButtonLabel;
 
         public RectTransform FloatingTextParent => floatingTextParent;
         public RectTransform HudParent => hudParent;
@@ -128,6 +130,24 @@ namespace RainbowTower.MainUi
 
         public void ShowDefeatPopup(Action onRestart)
         {
+            ShowSessionPopup(
+                "Defeat",
+                "The tower was overwhelmed.",
+                new Color(1f, 0.78f, 0.42f, 1f),
+                onRestart);
+        }
+
+        public void ShowVictoryPopup(string message, Action onRestart)
+        {
+            ShowSessionPopup(
+                "Milestone Reached",
+                string.IsNullOrWhiteSpace(message) ? "You survived the session prototype." : message,
+                new Color(0.7f, 1f, 0.75f, 1f),
+                onRestart);
+        }
+
+        private void ShowSessionPopup(string title, string message, Color titleColor, Action onRestart)
+        {
             EnsureEventSystem();
             EnsureDefeatPopup();
             if (defeatPopupRoot == null)
@@ -139,7 +159,18 @@ namespace RainbowTower.MainUi
 
             if (defeatTitleLabel != null)
             {
-                defeatTitleLabel.text = "Defeat";
+                defeatTitleLabel.text = title;
+                defeatTitleLabel.color = titleColor;
+            }
+
+            if (defeatMessageLabel != null)
+            {
+                defeatMessageLabel.text = message;
+            }
+
+            if (restartButtonLabel != null)
+            {
+                restartButtonLabel.text = "Restart";
             }
 
             if (restartButton != null)
@@ -367,12 +398,24 @@ namespace RainbowTower.MainUi
                 "DefeatLabel",
                 window,
                 "Defeat",
-                76f,
-                new Vector2(0f, 0.5f),
+                70f,
+                new Vector2(0f, 0.58f),
                 new Vector2(1f, 1f),
-                new Vector2(30f, -140f),
-                new Vector2(-30f, -30f));
+                new Vector2(30f, -124f),
+                new Vector2(-30f, -24f));
             defeatTitleLabel.color = new Color(1f, 0.78f, 0.42f, 1f);
+
+            defeatMessageLabel = CreateAnchoredText(
+                "MessageLabel",
+                window,
+                "The tower was overwhelmed.",
+                36f,
+                new Vector2(0f, 0.35f),
+                new Vector2(1f, 0.7f),
+                new Vector2(36f, -24f),
+                new Vector2(-36f, -24f));
+            defeatMessageLabel.color = new Color(1f, 0.93f, 0.82f, 1f);
+            defeatMessageLabel.textWrappingMode = TextWrappingModes.Normal;
 
             var buttonTransform = CreatePanel(
                 "RestartButton",
@@ -384,7 +427,7 @@ namespace RainbowTower.MainUi
                 new Vector2(190f, 112f));
 
             restartButton = buttonTransform.gameObject.AddComponent<Button>();
-            var buttonLabel = CreateAnchoredText(
+            restartButtonLabel = CreateAnchoredText(
                 "Label",
                 buttonTransform,
                 "Restart",
@@ -393,7 +436,7 @@ namespace RainbowTower.MainUi
                 Vector2.one,
                 new Vector2(0f, 0f),
                 new Vector2(0f, 0f));
-            buttonLabel.color = new Color(0.24f, 0.13f, 0.08f, 1f);
+            restartButtonLabel.color = new Color(0.24f, 0.13f, 0.08f, 1f);
 
             defeatPopupRoot.gameObject.SetActive(false);
         }
