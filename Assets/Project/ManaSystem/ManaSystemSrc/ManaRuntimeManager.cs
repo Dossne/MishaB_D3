@@ -8,8 +8,8 @@ namespace RainbowTower.ManaSystem
     public sealed class ManaRuntimeManager : IRuntimeManager
     {
         private readonly CrystalRuntimeManager crystalRuntimeManager;
-        private readonly int[] manaValues = new int[ManaColorUtility.Stage6ColorCount];
-        private readonly float[] generationCarry = new float[ManaColorUtility.Stage6ColorCount];
+        private readonly int[] manaValues = new int[ManaColorUtility.TotalColorCount];
+        private readonly float[] generationCarry = new float[ManaColorUtility.TotalColorCount];
 
         private ManaPrototypeConfig manaConfig;
         private MainUiProvider mainUiProvider;
@@ -66,9 +66,9 @@ namespace RainbowTower.ManaSystem
                 return;
             }
 
-            for (var index = 0; index < ManaColorUtility.Stage6Colors.Length; index++)
+            for (var index = 0; index < ManaColorUtility.AllColors.Length; index++)
             {
-                var color = ManaColorUtility.Stage6Colors[index];
+                var color = ManaColorUtility.AllColors[index];
                 manaValues[index] = 0;
                 generationCarry[index] = 0f;
                 TryAddMana(color, manaConfig.GetStartingMana(color));
@@ -107,27 +107,27 @@ namespace RainbowTower.ManaSystem
                 anyManaChanged |= TryAddMana(color, generatedMana);
             }
 
-            for (var index = 0; index < ManaColorUtility.MixedColors.Length; index++)
+            for (var index = 0; index < ManaColorUtility.ConversionColors.Length; index++)
             {
-                var mixedColor = ManaColorUtility.MixedColors[index];
-                if (!crystalRuntimeManager.IsUnlocked(mixedColor))
+                var conversionColor = ManaColorUtility.ConversionColors[index];
+                if (!crystalRuntimeManager.IsUnlocked(conversionColor))
                 {
                     continue;
                 }
 
-                if (!crystalRuntimeManager.TryGetGenerationInputs(mixedColor, out var inputColors) || inputColors == null || inputColors.Length == 0)
+                if (!crystalRuntimeManager.TryGetGenerationInputs(conversionColor, out var inputColors) || inputColors == null || inputColors.Length == 0)
                 {
                     continue;
                 }
 
-                var carryIndex = mixedColor.ToIndex();
+                var carryIndex = conversionColor.ToIndex();
                 if (!HasEnoughInputMana(inputColors, 1))
                 {
                     generationCarry[carryIndex] = Mathf.Min(generationCarry[carryIndex], 0.999f);
                     continue;
                 }
 
-                var generationPerSecond = crystalRuntimeManager.GetGenerationPerSecond(mixedColor);
+                var generationPerSecond = crystalRuntimeManager.GetGenerationPerSecond(conversionColor);
                 if (generationPerSecond <= 0f)
                 {
                     continue;
@@ -144,7 +144,7 @@ namespace RainbowTower.ManaSystem
 
                 for (var attempt = 0; attempt < produceAttempts; attempt++)
                 {
-                    if (IsAtCap(mixedColor) || !HasEnoughInputMana(inputColors, 1))
+                    if (IsAtCap(conversionColor) || !HasEnoughInputMana(inputColors, 1))
                     {
                         break;
                     }
@@ -154,7 +154,7 @@ namespace RainbowTower.ManaSystem
                         TrySpendManaInternal(inputColors[inputIndex], 1);
                     }
 
-                    if (!TryAddMana(mixedColor, 1))
+                    if (!TryAddMana(conversionColor, 1))
                     {
                         break;
                     }
@@ -186,7 +186,7 @@ namespace RainbowTower.ManaSystem
             manaConfig = null;
             mainUiProvider = null;
 
-            for (var index = 0; index < ManaColorUtility.Stage6ColorCount; index++)
+            for (var index = 0; index < ManaColorUtility.TotalColorCount; index++)
             {
                 manaValues[index] = 0;
                 generationCarry[index] = 0f;
@@ -267,6 +267,10 @@ namespace RainbowTower.ManaSystem
                 crystalRuntimeManager.GetCurrentLevel(ManaColor.Magenta),
                 manaValues[ManaColor.Cyan.ToIndex()],
                 crystalRuntimeManager.GetCurrentLevel(ManaColor.Cyan));
+
+            mainUiProvider.SetWhiteCrystalPanelValues(
+                manaValues[ManaColor.White.ToIndex()],
+                crystalRuntimeManager.GetCurrentLevel(ManaColor.White));
         }
     }
 }

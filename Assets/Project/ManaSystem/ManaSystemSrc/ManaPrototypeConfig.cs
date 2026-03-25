@@ -13,6 +13,7 @@ namespace RainbowTower.ManaSystem
         [SerializeField] private int startYellowMana;
         [SerializeField] private int startMagentaMana;
         [SerializeField] private int startCyanMana;
+        [SerializeField] private int startWhiteMana;
 
         public int GetStartingMana(ManaColor color)
         {
@@ -24,6 +25,7 @@ namespace RainbowTower.ManaSystem
                 ManaColor.Yellow => Mathf.Max(0, startYellowMana),
                 ManaColor.Magenta => Mathf.Max(0, startMagentaMana),
                 ManaColor.Cyan => Mathf.Max(0, startCyanMana),
+                ManaColor.White => Mathf.Max(0, startWhiteMana),
                 _ => 0
             };
         }

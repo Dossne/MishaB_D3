@@ -141,3 +141,34 @@ MonoBehaviour:
       manaCap: 16
       damage: 3
       upgradeCost: 0
+  - color: 6
+    startUnlocked: 0
+    unlockCost: 45
+    requiredUnlockedColors:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    generationInputColors:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    startLevel: 1
+    levels:
+    - generationPerSecond: 0.5
+      manaCap: 6
+      damage: 2
+      upgradeCost: 20
+    - generationPerSecond: 0.75
+      manaCap: 9
+      damage: 4
+      upgradeCost: 28
+    - generationPerSecond: 1
+      manaCap: 12
+      damage: 6
+      upgradeCost: 0

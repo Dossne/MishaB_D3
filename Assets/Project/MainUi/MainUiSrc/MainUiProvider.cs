@@ -41,6 +41,8 @@ namespace RainbowTower.MainUi
         [SerializeField] private TMP_Text yellowCrystalLabel;
         [SerializeField] private TMP_Text magentaCrystalLabel;
         [SerializeField] private TMP_Text cyanCrystalLabel;
+        [SerializeField] private TMP_Text whiteCrystalLabel;
+        [SerializeField] private Button unlockAllCrystalsCheatButton;
 
         [Header("Defeat Popup")]
         [SerializeField] private RectTransform defeatPopupRoot;
@@ -99,6 +101,28 @@ namespace RainbowTower.MainUi
             if (cyanCrystalLabel != null)
             {
                 cyanCrystalLabel.text = FormatBaseCrystalLabel("Cyan", cyanMana, cyanLevel);
+            }
+        }
+
+        public void SetWhiteCrystalPanelValues(int whiteMana, int whiteLevel)
+        {
+            if (whiteCrystalLabel != null)
+            {
+                whiteCrystalLabel.text = FormatBaseCrystalLabel("White", whiteMana, whiteLevel);
+            }
+        }
+
+        public void BindUnlockAllCrystalsCheat(Action onClick)
+        {
+            if (unlockAllCrystalsCheatButton == null)
+            {
+                return;
+            }
+
+            unlockAllCrystalsCheatButton.onClick.RemoveAllListeners();
+            if (onClick != null)
+            {
+                unlockAllCrystalsCheatButton.onClick.AddListener(() => onClick.Invoke());
             }
         }
 
@@ -177,6 +201,7 @@ namespace RainbowTower.MainUi
             AssignCrystalShelfReferences();
             SetBaseCrystalPanelValues(0, 1, 0, 1, 0, 1);
             SetMixedCrystalPanelValues(0, 1, 0, 1, 0, 1);
+            SetWhiteCrystalPanelValues(0, 1);
         }
 
         private void EnsureEventSystem()
@@ -247,6 +272,7 @@ namespace RainbowTower.MainUi
         {
             if (hudParent.Find("CrystalShelfPanel") != null)
             {
+                unlockAllCrystalsCheatButton = FindButton(hudParent, "CrystalShelfPanel/UnlockAllCheatButton");
                 return;
             }
 
@@ -268,6 +294,26 @@ namespace RainbowTower.MainUi
                 new Vector2(1f, 1f),
                 new Vector2(20f, -(20f + ShelfTitleHeight)),
                 new Vector2(-20f, -20f));
+
+            var cheatButtonTransform = CreatePanel(
+                "UnlockAllCheatButton",
+                shelfPanel,
+                new Color(0.94f, 0.72f, 0.28f, 1f),
+                new Vector2(1f, 1f),
+                new Vector2(1f, 1f),
+                new Vector2(-250f, -(18f + ShelfTitleHeight)),
+                new Vector2(-20f, -18f));
+            unlockAllCrystalsCheatButton = cheatButtonTransform.gameObject.AddComponent<Button>();
+            var cheatLabel = CreateAnchoredText(
+                "Label",
+                cheatButtonTransform,
+                "Unlock All",
+                26f,
+                Vector2.zero,
+                Vector2.one,
+                new Vector2(0f, 0f),
+                new Vector2(0f, 0f));
+            cheatLabel.color = new Color(0.2f, 0.12f, 0.06f, 1f);
 
             var rowsObject = new GameObject("ShelfRows", typeof(RectTransform));
             var rowsTransform = (RectTransform)rowsObject.transform;
@@ -366,6 +412,8 @@ namespace RainbowTower.MainUi
             yellowCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/MiddleRow/YellowSlot/Label");
             magentaCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/MiddleRow/MagentaSlot/Label");
             cyanCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/MiddleRow/CyanSlot/Label");
+            whiteCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/BottomRow/WhiteSlot/Label");
+            unlockAllCrystalsCheatButton = FindButton(hudParent, "CrystalShelfPanel/UnlockAllCheatButton");
         }
 
         private RectTransform CreatePanel(
@@ -527,6 +575,17 @@ namespace RainbowTower.MainUi
             textComponent.raycastTarget = false;
             textComponent.margin = Vector4.zero;
             return textComponent;
+        }
+
+        private Button FindButton(RectTransform root, string childName)
+        {
+            var child = root.Find(childName);
+            if (child != null && child.TryGetComponent<Button>(out var button))
+            {
+                return button;
+            }
+
+            return null;
         }
 
         private TMP_Text FindText(RectTransform root, string childName)

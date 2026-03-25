@@ -16,7 +16,8 @@ namespace RainbowTower.CrystalSystem
             new BaseCrystalDefinition(ManaColor.Blue),
             new BaseCrystalDefinition(ManaColor.Yellow),
             new BaseCrystalDefinition(ManaColor.Magenta),
-            new BaseCrystalDefinition(ManaColor.Cyan)
+            new BaseCrystalDefinition(ManaColor.Cyan),
+            new BaseCrystalDefinition(ManaColor.White)
         };
 
         public BaseCrystalDefinition[] BaseCrystalDefinitions => baseCrystalDefinitions;

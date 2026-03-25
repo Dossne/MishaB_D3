@@ -9,13 +9,14 @@ namespace RainbowTower.ManaSystem
         Blue = 2,
         Yellow = 3,
         Magenta = 4,
-        Cyan = 5
+        Cyan = 5,
+        White = 6
     }
 
     public static class ManaColorUtility
     {
         public const int BaseColorCount = 3;
-        public const int Stage6ColorCount = 6;
+        public const int TotalColorCount = 7;
 
         public static readonly ManaColor[] BaseColors =
         {
@@ -31,7 +32,7 @@ namespace RainbowTower.ManaSystem
             ManaColor.Cyan
         };
 
-        public static readonly ManaColor[] Stage6Colors =
+        public static readonly ManaColor[] NonWhiteColors =
         {
             ManaColor.Red,
             ManaColor.Green,
@@ -39,6 +40,25 @@ namespace RainbowTower.ManaSystem
             ManaColor.Yellow,
             ManaColor.Magenta,
             ManaColor.Cyan
+        };
+
+        public static readonly ManaColor[] ConversionColors =
+        {
+            ManaColor.Yellow,
+            ManaColor.Magenta,
+            ManaColor.Cyan,
+            ManaColor.White
+        };
+
+        public static readonly ManaColor[] AllColors =
+        {
+            ManaColor.Red,
+            ManaColor.Green,
+            ManaColor.Blue,
+            ManaColor.Yellow,
+            ManaColor.Magenta,
+            ManaColor.Cyan,
+            ManaColor.White
         };
 
         public static int ToIndex(this ManaColor color)
@@ -51,6 +71,7 @@ namespace RainbowTower.ManaSystem
                 ManaColor.Yellow => 3,
                 ManaColor.Magenta => 4,
                 ManaColor.Cyan => 5,
+                ManaColor.White => 6,
                 _ => throw new ArgumentOutOfRangeException(nameof(color), color, "Unsupported mana color.")
             };
         }
