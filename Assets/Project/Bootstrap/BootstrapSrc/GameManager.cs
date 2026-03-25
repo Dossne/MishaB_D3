@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using RainbowTower.CrystalSystem;
 using RainbowTower.EnemySystem;
 using RainbowTower.GameplayField;
+using RainbowTower.ManaSystem;
+using RainbowTower.ProgressionSystem;
+using RainbowTower.TowerSystem;
 using RainbowTower.WaveSystem;
 using UnityEngine;
 
@@ -89,11 +93,23 @@ namespace RainbowTower.Bootstrap
         {
             runtimeManagers.Clear();
 
+            var crystalRuntimeManager = new CrystalRuntimeManager();
+            var manaRuntimeManager = new ManaRuntimeManager(crystalRuntimeManager);
+            var progressionRuntimeManager = new ProgressionRuntimeManager();
             var enemyRuntimeManager = new EnemyRuntimeManager();
             var waveRuntimeManager = new WaveRuntimeManager(enemyRuntimeManager);
+            var towerRuntimeManager = new TowerRuntimeManager(
+                enemyRuntimeManager,
+                manaRuntimeManager,
+                crystalRuntimeManager,
+                progressionRuntimeManager);
 
+            RegisterRuntimeManager(crystalRuntimeManager);
+            RegisterRuntimeManager(manaRuntimeManager);
+            RegisterRuntimeManager(progressionRuntimeManager);
             RegisterRuntimeManager(enemyRuntimeManager);
             RegisterRuntimeManager(waveRuntimeManager);
+            RegisterRuntimeManager(towerRuntimeManager);
         }
 
         private void InitializeRuntimeManagers()
@@ -136,3 +152,4 @@ namespace RainbowTower.Bootstrap
         void Deinitialize();
     }
 }
+

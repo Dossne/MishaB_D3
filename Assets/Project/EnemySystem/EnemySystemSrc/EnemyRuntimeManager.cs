@@ -63,14 +63,45 @@ namespace RainbowTower.EnemySystem
                 enemyConfig.MoveSpeed,
                 enemyConfig.EnemyTint,
                 enemyConfig.EnemyScale,
+                enemyConfig.BaseHp,
+                enemyConfig.BaseRewardXp,
                 escapedEnemy =>
                 {
                     activeEnemies.Remove(escapedEnemy);
                     onReachedExit?.Invoke(escapedEnemy);
+                },
+                killedEnemy =>
+                {
+                    activeEnemies.Remove(killedEnemy);
                 });
 
             activeEnemies.Add(enemyView);
             return enemyView;
+        }
+
+        public bool TryGetEnemyClosestToExit(out EnemyView enemy)
+        {
+            enemy = null;
+            var bestProgress = float.MinValue;
+
+            for (var index = 0; index < activeEnemies.Count; index++)
+            {
+                var candidate = activeEnemies[index];
+                if (candidate == null || !candidate.IsAlive)
+                {
+                    continue;
+                }
+
+                if (candidate.ProgressToExit <= bestProgress)
+                {
+                    continue;
+                }
+
+                bestProgress = candidate.ProgressToExit;
+                enemy = candidate;
+            }
+
+            return enemy != null;
         }
 
         public void DespawnAllEnemies()
@@ -117,3 +148,4 @@ namespace RainbowTower.EnemySystem
         }
     }
 }
+

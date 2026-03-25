@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -34,6 +34,11 @@ namespace RainbowTower.MainUi
         [SerializeField] private TMP_Text hpLabel;
         [SerializeField] private TMP_Text waveLabel;
 
+        [Header("Crystal Panel")]
+        [SerializeField] private TMP_Text redCrystalLabel;
+        [SerializeField] private TMP_Text greenCrystalLabel;
+        [SerializeField] private TMP_Text blueCrystalLabel;
+
         [Header("Defeat Popup")]
         [SerializeField] private RectTransform defeatPopupRoot;
         [SerializeField] private TMP_Text defeatTitleLabel;
@@ -55,6 +60,24 @@ namespace RainbowTower.MainUi
             if (waveLabel != null)
             {
                 waveLabel.text = $"Wave {currentWave}/{totalWaves}";
+            }
+        }
+
+        public void SetBaseCrystalPanelValues(int redMana, int redLevel, int greenMana, int greenLevel, int blueMana, int blueLevel)
+        {
+            if (redCrystalLabel != null)
+            {
+                redCrystalLabel.text = FormatBaseCrystalLabel("Red", redMana, redLevel);
+            }
+
+            if (greenCrystalLabel != null)
+            {
+                greenCrystalLabel.text = FormatBaseCrystalLabel("Green", greenMana, greenLevel);
+            }
+
+            if (blueCrystalLabel != null)
+            {
+                blueCrystalLabel.text = FormatBaseCrystalLabel("Blue", blueMana, blueLevel);
             }
         }
 
@@ -129,6 +152,8 @@ namespace RainbowTower.MainUi
 
             BuildHud();
             BuildCrystalShelf();
+            AssignCrystalShelfReferences();
+            SetBaseCrystalPanelValues(0, 1, 0, 1, 0, 1);
         }
 
         private void EnsureEventSystem()
@@ -239,9 +264,9 @@ namespace RainbowTower.MainUi
             rowsLayout.childForceExpandWidth = true;
             rowsLayout.childForceExpandHeight = true;
 
-            CreateCrystalRow("TopRow", rowsTransform, "Red", "Green", "Blue");
-            CreateCrystalRow("MiddleRow", rowsTransform, "Yellow", "Magenta", "Cyan");
-            CreateCrystalRow("BottomRow", rowsTransform, "White");
+            CreateCrystalRow("TopRow", rowsTransform, true, "Red", "Green", "Blue");
+            CreateCrystalRow("MiddleRow", rowsTransform, false, "Yellow", "Magenta", "Cyan");
+            CreateCrystalRow("BottomRow", rowsTransform, false, "White");
         }
 
         private void EnsureDefeatPopup()
@@ -308,6 +333,13 @@ namespace RainbowTower.MainUi
         {
             hpLabel = FindText(hudParent, "HpLabel");
             waveLabel = FindText(hudParent, "WaveLabel");
+        }
+
+        private void AssignCrystalShelfReferences()
+        {
+            redCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/TopRow/RedSlot/Label");
+            greenCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/TopRow/GreenSlot/Label");
+            blueCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/TopRow/BlueSlot/Label");
         }
 
         private RectTransform CreatePanel(
@@ -398,7 +430,7 @@ namespace RainbowTower.MainUi
             return textComponent;
         }
 
-        private void CreateCrystalRow(string objectName, RectTransform parent, params string[] crystalNames)
+        private void CreateCrystalRow(string objectName, RectTransform parent, bool showBaseStats, params string[] crystalNames)
         {
             var rowObject = new GameObject(objectName, typeof(RectTransform));
             var rowTransform = (RectTransform)rowObject.transform;
@@ -421,11 +453,11 @@ namespace RainbowTower.MainUi
 
             for (var index = 0; index < crystalNames.Length; index++)
             {
-                CreateCrystalSlot(crystalNames[index], rowTransform);
+                CreateCrystalSlot(crystalNames[index], rowTransform, showBaseStats);
             }
         }
 
-        private void CreateCrystalSlot(string crystalName, RectTransform parent)
+        private void CreateCrystalSlot(string crystalName, RectTransform parent, bool showBaseStats)
         {
             var slotObject = new GameObject($"{crystalName}Slot", typeof(RectTransform), typeof(Image));
             var slotTransform = (RectTransform)slotObject.transform;
@@ -450,9 +482,12 @@ namespace RainbowTower.MainUi
             labelTransform.offsetMax = new Vector2(-10f, -6f);
             labelTransform.localScale = Vector3.one;
 
-            var label = ConfigureText(labelObject.GetComponent<TextMeshProUGUI>(), crystalName, 30f, FontStyles.Bold);
+            var text = showBaseStats ? FormatBaseCrystalLabel(crystalName, 0, 1) : crystalName;
+            var fontSize = showBaseStats ? 25f : 30f;
+            var label = ConfigureText(labelObject.GetComponent<TextMeshProUGUI>(), text, fontSize, FontStyles.Bold);
             label.alignment = TextAlignmentOptions.Center;
             label.color = crystalName == "White" ? new Color(0.18f, 0.12f, 0.22f, 1f) : Color.white;
+            label.textWrappingMode = TextWrappingModes.Normal;
         }
 
         private TMP_Text ConfigureText(TextMeshProUGUI textComponent, string text, float fontSize, FontStyles fontStyle)
@@ -497,6 +532,11 @@ namespace RainbowTower.MainUi
             return null;
         }
 
+        private static string FormatBaseCrystalLabel(string crystalName, int mana, int level)
+        {
+            return $"{crystalName}\nM {Mathf.Max(0, mana)}\nLv {Mathf.Max(1, level)}";
+        }
+
         private Color GetCrystalColor(string crystalName)
         {
             return crystalName switch
@@ -513,5 +553,4 @@ namespace RainbowTower.MainUi
         }
     }
 }
-
 
