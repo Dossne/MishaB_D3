@@ -1,4 +1,5 @@
 using RainbowTower.Bootstrap;
+using RainbowTower.CombatFeedback;
 using RainbowTower.CrystalSystem;
 using RainbowTower.MainUi;
 using UnityEngine;
@@ -8,6 +9,7 @@ namespace RainbowTower.ManaSystem
     public sealed class ManaRuntimeManager : IRuntimeManager
     {
         private readonly CrystalRuntimeManager crystalRuntimeManager;
+        private readonly CombatFeedbackRuntimeManager combatFeedbackRuntimeManager;
         private readonly int[] manaValues = new int[ManaColorUtility.TotalColorCount];
         private readonly float[] generationCarry = new float[ManaColorUtility.TotalColorCount];
 
@@ -15,9 +17,10 @@ namespace RainbowTower.ManaSystem
         private MainUiProvider mainUiProvider;
         private bool isReady;
 
-        public ManaRuntimeManager(CrystalRuntimeManager crystalRuntimeManager)
+        public ManaRuntimeManager(CrystalRuntimeManager crystalRuntimeManager, CombatFeedbackRuntimeManager combatFeedbackRuntimeManager)
         {
             this.crystalRuntimeManager = crystalRuntimeManager;
+            this.combatFeedbackRuntimeManager = combatFeedbackRuntimeManager;
         }
 
         public int GetCurrentMana(ManaColor color)
@@ -274,3 +277,7 @@ namespace RainbowTower.ManaSystem
         }
     }
 }
+
+
+
+

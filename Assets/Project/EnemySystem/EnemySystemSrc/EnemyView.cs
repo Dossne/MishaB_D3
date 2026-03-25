@@ -6,6 +6,8 @@ namespace RainbowTower.EnemySystem
     [DisallowMultipleComponent]
     public sealed class EnemyView : MonoBehaviour
     {
+        private const float HitFlashDuration = 0.09f;
+
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private int sortingOrder = -4;
 
@@ -14,8 +16,10 @@ namespace RainbowTower.EnemySystem
         private float moveSpeed;
         private float totalPathLength;
         private float traversedPathLength;
+        private float hitFlashTimer;
         private bool isInitialized;
         private bool isRemoved;
+        private Color baseTint;
         private Action<EnemyView> onReachedExit;
         private Action<EnemyView> onKilled;
 
@@ -54,10 +58,12 @@ namespace RainbowTower.EnemySystem
             RewardXp = Mathf.Max(0, rewardXp);
             isInitialized = true;
             isRemoved = false;
+            hitFlashTimer = 0f;
+            baseTint = tint;
 
             transform.position = waypoints[0];
             transform.localScale = new Vector3(scale.x, scale.y, 1f);
-            spriteRenderer.color = tint;
+            spriteRenderer.color = baseTint;
         }
 
         public bool ApplyDamage(int damage)
@@ -69,6 +75,8 @@ namespace RainbowTower.EnemySystem
 
             var actualDamage = Mathf.Max(1, damage);
             CurrentHp = Mathf.Max(0, CurrentHp - actualDamage);
+            TriggerHitFlash();
+
             if (CurrentHp > 0)
             {
                 return false;
@@ -81,6 +89,7 @@ namespace RainbowTower.EnemySystem
         private void Awake()
         {
             EnsureVisual();
+            baseTint = spriteRenderer != null ? spriteRenderer.color : Color.white;
         }
 
         private void Update()
@@ -89,6 +98,8 @@ namespace RainbowTower.EnemySystem
             {
                 return;
             }
+
+            UpdateHitFlash(Time.deltaTime);
 
             if (nextWaypointIndex >= waypoints.Length)
             {
@@ -123,6 +134,25 @@ namespace RainbowTower.EnemySystem
 
             spriteRenderer.sprite = SpriteFactory.WhiteSprite;
             spriteRenderer.sortingOrder = sortingOrder;
+        }
+
+        private void TriggerHitFlash()
+        {
+            hitFlashTimer = HitFlashDuration;
+            spriteRenderer.color = Color.white;
+        }
+
+        private void UpdateHitFlash(float deltaTime)
+        {
+            if (hitFlashTimer <= 0f)
+            {
+                spriteRenderer.color = baseTint;
+                return;
+            }
+
+            hitFlashTimer -= deltaTime;
+            var normalized = 1f - Mathf.Clamp01(hitFlashTimer / HitFlashDuration);
+            spriteRenderer.color = Color.Lerp(Color.white, baseTint, normalized);
         }
 
         private void Escape()

@@ -1,6 +1,8 @@
 using RainbowTower.Bootstrap;
+using RainbowTower.CombatFeedback;
 using RainbowTower.CrystalSystem;
 using RainbowTower.EnemySystem;
+using RainbowTower.GameplayField;
 using RainbowTower.ManaSystem;
 using RainbowTower.ProgressionSystem;
 using UnityEngine;
@@ -13,8 +15,10 @@ namespace RainbowTower.TowerSystem
         private readonly ManaRuntimeManager manaRuntimeManager;
         private readonly CrystalRuntimeManager crystalRuntimeManager;
         private readonly ProgressionRuntimeManager progressionRuntimeManager;
+        private readonly CombatFeedbackRuntimeManager combatFeedbackRuntimeManager;
 
         private TowerPrototypeConfig towerConfig;
+        private Transform towerAnchor;
         private float shotTimer;
         private bool isReady;
 
@@ -22,12 +26,14 @@ namespace RainbowTower.TowerSystem
             EnemyRuntimeManager enemyRuntimeManager,
             ManaRuntimeManager manaRuntimeManager,
             CrystalRuntimeManager crystalRuntimeManager,
-            ProgressionRuntimeManager progressionRuntimeManager)
+            ProgressionRuntimeManager progressionRuntimeManager,
+            CombatFeedbackRuntimeManager combatFeedbackRuntimeManager)
         {
             this.enemyRuntimeManager = enemyRuntimeManager;
             this.manaRuntimeManager = manaRuntimeManager;
             this.crystalRuntimeManager = crystalRuntimeManager;
             this.progressionRuntimeManager = progressionRuntimeManager;
+            this.combatFeedbackRuntimeManager = combatFeedbackRuntimeManager;
         }
 
         public void Initialize(ServiceLocator serviceLocator)
@@ -38,6 +44,11 @@ namespace RainbowTower.TowerSystem
                 Debug.LogError("TowerRuntimeManager requires TowerPrototypeConfig.");
                 isReady = false;
                 return;
+            }
+
+            if (serviceLocator.TryGet<GameplayFieldProvider>(out var fieldProvider))
+            {
+                towerAnchor = fieldProvider.TowerAnchor;
             }
 
             shotTimer = GetCurrentShotInterval();
@@ -72,18 +83,33 @@ namespace RainbowTower.TowerSystem
 
             if (!crystalRuntimeManager.TryGetNextAttackColor(manaRuntimeManager, out var manaColor))
             {
+                combatFeedbackRuntimeManager?.NotifyInsufficientMana();
                 return;
             }
 
             if (!manaRuntimeManager.TrySpendMana(manaColor, 1))
             {
+                combatFeedbackRuntimeManager?.NotifyInsufficientMana();
                 return;
             }
 
             var damage = crystalRuntimeManager.GetShotDamage(manaColor);
-            if (targetEnemy.ApplyDamage(damage) && targetEnemy.RewardXp > 0)
+            var towerPosition = towerAnchor != null ? towerAnchor.position : Vector3.zero;
+            var targetPosition = targetEnemy.transform.position;
+
+            combatFeedbackRuntimeManager?.NotifyTowerShot(manaColor, towerPosition, targetPosition);
+
+            var killedEnemy = targetEnemy.ApplyDamage(damage);
+            combatFeedbackRuntimeManager?.NotifyEnemyHit(targetPosition, manaColor, damage, killedEnemy);
+
+            if (killedEnemy)
             {
-                progressionRuntimeManager.AddXp(targetEnemy.RewardXp);
+                combatFeedbackRuntimeManager?.NotifyEnemyDeath(targetPosition, targetEnemy.RewardXp);
+
+                if (targetEnemy.RewardXp > 0)
+                {
+                    progressionRuntimeManager.AddXp(targetEnemy.RewardXp);
+                }
             }
         }
 
@@ -96,6 +122,7 @@ namespace RainbowTower.TowerSystem
             isReady = false;
             shotTimer = 0f;
             towerConfig = null;
+            towerAnchor = null;
         }
 
         private float GetCurrentShotInterval()
@@ -106,3 +133,4 @@ namespace RainbowTower.TowerSystem
         }
     }
 }
+

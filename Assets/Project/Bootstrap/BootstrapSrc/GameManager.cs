@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RainbowTower.CombatFeedback;
 using RainbowTower.CrystalSystem;
 using RainbowTower.EnemySystem;
 using RainbowTower.GameplayField;
@@ -95,14 +96,16 @@ namespace RainbowTower.Bootstrap
 
             var progressionRuntimeManager = new ProgressionRuntimeManager();
             var crystalRuntimeManager = new CrystalRuntimeManager(progressionRuntimeManager);
-            var manaRuntimeManager = new ManaRuntimeManager(crystalRuntimeManager);
+            var combatFeedbackRuntimeManager = new CombatFeedbackRuntimeManager();
+            var manaRuntimeManager = new ManaRuntimeManager(crystalRuntimeManager, combatFeedbackRuntimeManager);
             var enemyRuntimeManager = new EnemyRuntimeManager();
             var waveRuntimeManager = new WaveRuntimeManager(enemyRuntimeManager);
             var towerRuntimeManager = new TowerRuntimeManager(
                 enemyRuntimeManager,
                 manaRuntimeManager,
                 crystalRuntimeManager,
-                progressionRuntimeManager);
+                progressionRuntimeManager,
+                combatFeedbackRuntimeManager);
 
             RegisterRuntimeManager(progressionRuntimeManager);
             RegisterRuntimeManager(crystalRuntimeManager);
@@ -110,6 +113,7 @@ namespace RainbowTower.Bootstrap
             RegisterRuntimeManager(enemyRuntimeManager);
             RegisterRuntimeManager(waveRuntimeManager);
             RegisterRuntimeManager(towerRuntimeManager);
+            RegisterRuntimeManager(combatFeedbackRuntimeManager);
         }
 
         private void InitializeRuntimeManagers()
@@ -152,3 +156,4 @@ namespace RainbowTower.Bootstrap
         void Deinitialize();
     }
 }
+

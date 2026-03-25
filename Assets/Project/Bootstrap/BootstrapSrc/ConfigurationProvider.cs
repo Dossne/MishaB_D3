@@ -1,4 +1,5 @@
 using System;
+using RainbowTower.CombatFeedback;
 using RainbowTower.CrystalSystem;
 using RainbowTower.EnemySystem;
 using RainbowTower.GameplayField;
@@ -22,6 +23,7 @@ namespace RainbowTower.Bootstrap
         [SerializeField] private CrystalPrototypeConfig crystalPrototypeConfig;
         [SerializeField] private TowerPrototypeConfig towerPrototypeConfig;
         [SerializeField] private ProgressionPrototypeConfig progressionPrototypeConfig;
+        [SerializeField] private CombatFeedbackConfig combatFeedbackConfig;
         [SerializeField] private ScriptableObject[] featureConfigurations = Array.Empty<ScriptableObject>();
 
         public GameplayFieldLayoutConfig GameplayFieldLayoutConfig => gameplayFieldLayoutConfig;
@@ -31,6 +33,7 @@ namespace RainbowTower.Bootstrap
         public CrystalPrototypeConfig CrystalPrototypeConfig => crystalPrototypeConfig;
         public TowerPrototypeConfig TowerPrototypeConfig => towerPrototypeConfig;
         public ProgressionPrototypeConfig ProgressionPrototypeConfig => progressionPrototypeConfig;
+        public CombatFeedbackConfig CombatFeedbackConfig => combatFeedbackConfig;
 
         public TConfig GetConfiguration<TConfig>() where TConfig : ScriptableObject
         {
@@ -67,6 +70,11 @@ namespace RainbowTower.Bootstrap
             if (progressionPrototypeConfig is TConfig typedProgressionPrototypeConfig)
             {
                 return typedProgressionPrototypeConfig;
+            }
+
+            if (combatFeedbackConfig is TConfig typedCombatFeedbackConfig)
+            {
+                return typedCombatFeedbackConfig;
             }
 
             for (var index = 0; index < featureConfigurations.Length; index++)
