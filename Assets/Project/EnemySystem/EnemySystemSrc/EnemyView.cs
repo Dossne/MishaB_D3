@@ -7,6 +7,7 @@ namespace RainbowTower.EnemySystem
     public sealed class EnemyView : MonoBehaviour
     {
         private const float HitFlashDuration = 0.09f;
+        private const float TargetSpriteMaxWorldSize = 2.56f;
 
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private int sortingOrder = -4;
@@ -35,6 +36,7 @@ namespace RainbowTower.EnemySystem
             Vector2 scale,
             int startHp,
             int rewardXp,
+            Sprite enemySprite,
             Action<EnemyView> reachedExitCallback,
             Action<EnemyView> killedCallback)
         {
@@ -60,9 +62,14 @@ namespace RainbowTower.EnemySystem
             isRemoved = false;
             hitFlashTimer = 0f;
             baseTint = tint;
+            if (enemySprite != null)
+            {
+                spriteRenderer.sprite = enemySprite;
+            }
 
             transform.position = waypoints[0];
-            transform.localScale = new Vector3(scale.x, scale.y, 1f);
+            var normalizedScale = NormalizeScale(scale, spriteRenderer != null ? spriteRenderer.sprite : null);
+            transform.localScale = new Vector3(normalizedScale.x, normalizedScale.y, 1f);
             spriteRenderer.color = baseTint;
         }
 
@@ -132,7 +139,10 @@ namespace RainbowTower.EnemySystem
                 spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
             }
 
-            spriteRenderer.sprite = SpriteFactory.WhiteSprite;
+            if (spriteRenderer.sprite == null)
+            {
+                spriteRenderer.sprite = SpriteFactory.WhiteSprite;
+            }
             spriteRenderer.sortingOrder = sortingOrder;
         }
 
@@ -178,6 +188,24 @@ namespace RainbowTower.EnemySystem
             isRemoved = true;
             onKilled?.Invoke(this);
             Destroy(gameObject);
+        }
+
+        private static Vector2 NormalizeScale(Vector2 baseScale, Sprite sprite)
+        {
+            if (sprite == null)
+            {
+                return baseScale;
+            }
+
+            var spriteSize = sprite.bounds.size;
+            var maxDimension = Mathf.Max(spriteSize.x, spriteSize.y);
+            if (maxDimension <= Mathf.Epsilon)
+            {
+                return baseScale;
+            }
+
+            var factor = TargetSpriteMaxWorldSize / maxDimension;
+            return baseScale * factor;
         }
 
         private static float CalculatePathLength(Vector3[] pathWaypoints)

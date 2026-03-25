@@ -23,6 +23,13 @@ namespace RainbowTower.TapDrops
         [SerializeField] private TapDropView dropPrefab;
         [SerializeField, Min(0.1f)] private float dropWorldSize = 0.3f;
         [SerializeField] private int sortingOrder = -3;
+        [SerializeField] private Sprite redDropSprite;
+        [SerializeField] private Sprite greenDropSprite;
+        [SerializeField] private Sprite blueDropSprite;
+        [SerializeField] private Sprite yellowDropSprite;
+        [SerializeField] private Sprite magentaDropSprite;
+        [SerializeField] private Sprite cyanDropSprite;
+        [SerializeField] private Sprite whiteDropSprite;
 
         [Header("Feedback")]
         [SerializeField, Min(0.03f)] private float spawnFeedbackDuration = 0.14f;
@@ -47,6 +54,21 @@ namespace RainbowTower.TapDrops
         public float CollectFeedbackDuration => Mathf.Max(0.03f, collectFeedbackDuration);
         public float ExpireFeedbackDuration => Mathf.Max(0.03f, expireFeedbackDuration);
 
+        public Sprite GetDropSprite(ManaColor color)
+        {
+            return color switch
+            {
+                ManaColor.Red => redDropSprite,
+                ManaColor.Green => greenDropSprite,
+                ManaColor.Blue => blueDropSprite,
+                ManaColor.Yellow => yellowDropSprite,
+                ManaColor.Magenta => magentaDropSprite,
+                ManaColor.Cyan => cyanDropSprite,
+                ManaColor.White => whiteDropSprite,
+                _ => null
+            };
+        }
+
         public static Color GetColor(ManaColor color)
         {
             return color switch
@@ -63,3 +85,4 @@ namespace RainbowTower.TapDrops
         }
     }
 }
+

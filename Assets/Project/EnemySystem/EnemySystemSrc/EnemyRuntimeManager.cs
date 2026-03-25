@@ -13,6 +13,7 @@ namespace RainbowTower.EnemySystem
         private EnemyPrototypeConfig enemyConfig;
         private Vector3[] cachedPathPoints;
         private Transform runtimeParent;
+        private int spriteRotationIndex;
         private bool isReady;
 
         public int ActiveEnemyCount => activeEnemies.Count;
@@ -47,6 +48,7 @@ namespace RainbowTower.EnemySystem
             runtimeParent.SetParent(fieldProvider.FieldVisualRoot, false);
 
             activeEnemies.Clear();
+            spriteRotationIndex = 0;
             isReady = true;
         }
 
@@ -59,14 +61,18 @@ namespace RainbowTower.EnemySystem
 
             var enemyView = UnityEngine.Object.Instantiate(enemyConfig.EnemyPrefab, runtimeParent);
             var scaledRewardXp = Mathf.Max(0, enemyConfig.BaseRewardXp + Mathf.Max(0, rewardXpBonus));
+            var sprite = ResolveEnemySprite();
+            var tint = sprite != null ? Color.white : enemyConfig.EnemyTint;
+            var adjustedScale = enemyConfig.EnemyScale * ResolveSpawnScaleMultiplier(sprite);
 
             enemyView.Initialize(
                 cachedPathPoints,
                 enemyConfig.MoveSpeed,
-                enemyConfig.EnemyTint,
-                enemyConfig.EnemyScale,
+                tint,
+                adjustedScale,
                 Mathf.Max(1, enemyConfig.BaseHp + Mathf.Max(0, hpBonus)),
                 scaledRewardXp,
+                sprite,
                 escapedEnemy =>
                 {
                     activeEnemies.Remove(escapedEnemy);
@@ -79,6 +85,58 @@ namespace RainbowTower.EnemySystem
 
             activeEnemies.Add(enemyView);
             return enemyView;
+        }
+
+        private Sprite ResolveEnemySprite()
+        {
+            var sprites = enemyConfig != null ? enemyConfig.EnemySprites : null;
+            if (sprites == null || sprites.Length == 0)
+            {
+                return null;
+            }
+
+            for (var offset = 0; offset < sprites.Length; offset++)
+            {
+                var index = (spriteRotationIndex + offset) % sprites.Length;
+                var candidate = sprites[index];
+                if (candidate == null)
+                {
+                    continue;
+                }
+
+                spriteRotationIndex = (index + 1) % sprites.Length;
+                return candidate;
+            }
+
+            return null;
+        }
+
+        private static float ResolveSpawnScaleMultiplier(Sprite sprite)
+        {
+            if (sprite == null || string.IsNullOrEmpty(sprite.name))
+            {
+                return 1f;
+            }
+
+            var tokens = sprite.name.Split('_');
+            for (var index = 0; index < tokens.Length; index++)
+            {
+                if (!int.TryParse(tokens[index], out var spriteNumber))
+                {
+                    continue;
+                }
+
+                return spriteNumber switch
+                {
+                    1 => 0.75f,
+                    2 => 0.875f,
+                    3 => 1.125f,
+                    4 => 1.35f,
+                    _ => 1f
+                };
+            }
+
+            return 1f;
         }
 
         public bool TryGetEnemyClosestToExit(out EnemyView enemy)

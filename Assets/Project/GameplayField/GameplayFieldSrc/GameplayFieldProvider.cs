@@ -10,7 +10,6 @@ namespace RainbowTower.GameplayField
         private const int PathOrder = -15;
         private const int PortalGlowOrder = -10;
         private const int PortalOrder = -9;
-        private const int TowerShadowOrder = -8;
         private const int TowerOrder = -7;
         private const float FieldBackgroundScale = 0.55f;
 
@@ -152,14 +151,12 @@ namespace RainbowTower.GameplayField
             CreatePortal("ExitPortalGlow", "ExitPortal", exitLocal, portalSize, layoutConfig, pixelsToWorldX, pixelsToWorldY);
 
             var towerBaseSize = new Vector2(layoutConfig.TowerBaseSizePixels.x * pixelsToWorldX, layoutConfig.TowerBaseSizePixels.y * pixelsToWorldY);
-            var towerCoreSize = new Vector2(layoutConfig.TowerCoreSizePixels.x * pixelsToWorldX, layoutConfig.TowerCoreSizePixels.y * pixelsToWorldY);
-            var shadowSize = new Vector2(layoutConfig.TowerShadowSizePixels.x * pixelsToWorldX, layoutConfig.TowerShadowSizePixels.y * pixelsToWorldY);
 
-            CreateOrUpdateSprite("TowerShadow", fieldVisualRoot, new Vector3(0f, -towerBaseSize.y * 0.42f, 0f), shadowSize, layoutConfig.ShadowColor, TowerShadowOrder);
-            CreateOrUpdateSprite("TowerBase", fieldVisualRoot, Vector3.zero, towerBaseSize, layoutConfig.TowerBaseColor, TowerOrder);
-            CreateOrUpdateSprite("TowerCore", fieldVisualRoot, new Vector3(0f, 0.04f, 0f), towerCoreSize, layoutConfig.TowerCoreColor, TowerOrder + 1);
+            RemoveSpriteIfExists("TowerShadow", fieldVisualRoot);
+            CreateOrUpdateSprite("TowerVisual", fieldVisualRoot, new Vector3(0f, 0.04f, 0f), towerBaseSize, Color.white, TowerOrder + 1, layoutConfig.TowerSprite != null ? layoutConfig.TowerSprite : SpriteFactory.WhiteSprite);
+            RemoveSpriteIfExists("TowerBase", fieldVisualRoot);
+            RemoveSpriteIfExists("TowerCore", fieldVisualRoot);
         }
-
         private void ApplyPathWaypointPositions(Vector3[] positions)
         {
             var waypoints = pathDefinition.Waypoints;
@@ -264,4 +261,8 @@ namespace RainbowTower.GameplayField
         }
     }
 }
+
+
+
+
 

@@ -36,6 +36,10 @@ namespace RainbowTower.CrystalSystem
         private int nextRotationIndex;
         private int lastPresentedXp;
 
+        private RectTransform activePopupOverlay;
+        private float storedTimeScale = 1f;
+        private bool isPopupOpen;
+
         public CrystalRuntimeManager(ProgressionRuntimeManager progressionRuntimeManager)
         {
             this.progressionRuntimeManager = progressionRuntimeManager;
@@ -233,15 +237,17 @@ namespace RainbowTower.CrystalSystem
         {
             for (var index = 0; index < levelsByColor.Length; index++)
             {
-                if (uiEntriesByColor[index]?.ActionButton != null)
+                if (uiEntriesByColor[index]?.SlotButton != null)
                 {
-                    uiEntriesByColor[index].ActionButton.onClick.RemoveAllListeners();
+                    uiEntriesByColor[index].SlotButton.onClick.RemoveAllListeners();
                 }
 
                 unlockedByColor[index] = false;
                 levelsByColor[index] = 0;
                 uiEntriesByColor[index] = null;
             }
+
+            CloseActivePopup();
 
             if (mainUiProvider != null)
             {
@@ -256,7 +262,6 @@ namespace RainbowTower.CrystalSystem
             lastPresentedXp = -1;
             IsReady = false;
         }
-
         private void OnUnlockAllCheatAction()
         {
             if (!IsReady)
@@ -272,28 +277,25 @@ namespace RainbowTower.CrystalSystem
             RefreshActionUi();
         }
 
-        private void OnColorAction(ManaColor color)
+        private void OnSlotPressed(ManaColor color)
         {
-            TryPerformPrimaryAction(color);
-        }
-
-        private void TryPerformPrimaryAction(ManaColor color)
-        {
-            if (!IsReady)
+            if (!IsReady || crystalConfig == null || !crystalConfig.TryGetDefinition(color, out var definition) || definition == null)
             {
                 return;
             }
 
-            if (IsUnlocked(color))
+            if (!IsUnlocked(color))
             {
-                TryUpgrade(color);
-            }
-            else
-            {
-                TryUnlock(color);
+                if (!HasUnlockDependencies(definition) || !CanAffordOrFree(definition.UnlockCost))
+                {
+                    return;
+                }
+
+                OpenUnlockPopup(color, definition);
+                return;
             }
 
-            RefreshActionUi();
+            OpenUpgradePopup(color, definition);
         }
 
         private bool TryUnlock(ManaColor color)
@@ -332,8 +334,8 @@ namespace RainbowTower.CrystalSystem
                 return false;
             }
 
-            var levelData = definition.Levels[currentLevel - 1];
-            var upgradeCost = levelData == null ? 0 : levelData.UpgradeCost;
+            var currentLevelData = definition.Levels[currentLevel - 1];
+            var upgradeCost = currentLevelData == null ? 0 : currentLevelData.UpgradeCost;
             if (upgradeCost > 0 && !progressionRuntimeManager.TrySpendXp(upgradeCost))
             {
                 return false;
@@ -404,80 +406,55 @@ namespace RainbowTower.CrystalSystem
 
             if (!crystalConfig.TryGetDefinition(color, out var definition) || definition == null)
             {
-                SetUiEntryState(uiEntry, "Locked", "N/A", false);
+                SetSlotInteractableState(uiEntry, false, null);
                 return;
             }
 
-            var status = "Locked";
-            var actionLabel = "Unlock";
-            var interactable = false;
+            if (uiEntry.LevelLabel != null)
+            {
+                uiEntry.LevelLabel.text = $"LV {Mathf.Max(1, GetCurrentLevel(color))}";
+            }
 
             if (!IsUnlocked(color))
             {
-                if (!HasUnlockDependencies(definition))
-                {
-                    status = "Locked";
-                    actionLabel = BuildDependencyLabel(definition.RequiredUnlockedColors);
-                    interactable = false;
-                }
-                else
-                {
-                    status = "Locked";
-                    actionLabel = $"Unlock {definition.UnlockCost} XP";
-                    interactable = definition.UnlockCost <= 0 || progressionRuntimeManager.CanAfford(definition.UnlockCost);
-                }
-            }
-            else
-            {
-                var currentLevel = GetCurrentLevel(color);
-                if (definition.Levels != null && currentLevel > 0 && currentLevel < definition.Levels.Length)
-                {
-                    var levelData = definition.Levels[currentLevel - 1];
-                    var upgradeCost = levelData == null ? 0 : levelData.UpgradeCost;
-                    status = "Upgradeable";
-                    actionLabel = $"Upgrade {upgradeCost} XP";
-                    interactable = upgradeCost <= 0 || progressionRuntimeManager.CanAfford(upgradeCost);
-                }
-                else
-                {
-                    status = "Unlocked";
-                    actionLabel = "Max Level";
-                    interactable = false;
-                }
+                var canUnlock = HasUnlockDependencies(definition) && CanAffordOrFree(definition.UnlockCost);
+                SetSlotInteractableState(uiEntry, canUnlock, canUnlock ? mainUiProvider?.LockIndicatorSprite : null);
+                return;
             }
 
-            SetUiEntryState(uiEntry, status, actionLabel, interactable);
+            var currentLevel = GetCurrentLevel(color);
+            var hasNextLevel = definition.Levels != null && currentLevel > 0 && currentLevel < definition.Levels.Length;
+            var canUpgrade = hasNextLevel && CanAffordOrFree(definition.Levels[currentLevel - 1]?.UpgradeCost ?? 0);
+            SetSlotInteractableState(uiEntry, true, canUpgrade ? mainUiProvider?.UpgradeIndicatorSprite : null);
         }
 
-        private void SetUiEntryState(CrystalUiEntry uiEntry, string status, string actionLabel, bool interactable)
+        private void SetSlotInteractableState(CrystalUiEntry uiEntry, bool interactable, Sprite indicatorSprite)
         {
-            if (uiEntry.StatusLabel != null)
+            if (uiEntry.SlotButton != null)
             {
-                uiEntry.StatusLabel.text = status;
-                uiEntry.StatusLabel.color = status switch
+                uiEntry.SlotButton.interactable = interactable;
+            }
+
+            if (uiEntry.SlotButtonGraphic != null)
+            {
+                uiEntry.SlotButtonGraphic.color = interactable
+                    ? new Color(1f, 1f, 1f, 0.02f)
+                    : new Color(0f, 0f, 0f, 0.18f);
+            }
+
+            if (uiEntry.IndicatorImage != null)
+            {
+                if (indicatorSprite == null)
                 {
-                    "Upgradeable" => new Color(0.68f, 1f, 0.7f, 1f),
-                    "Unlocked" => new Color(0.72f, 0.93f, 1f, 1f),
-                    _ => new Color(1f, 0.82f, 0.52f, 1f)
-                };
-            }
-
-            if (uiEntry.ActionLabel != null)
-            {
-                uiEntry.ActionLabel.text = actionLabel;
-                uiEntry.ActionLabel.color = interactable ? new Color(0.24f, 0.15f, 0.08f, 1f) : new Color(0.47f, 0.47f, 0.47f, 1f);
-            }
-
-            if (uiEntry.ActionButton != null)
-            {
-                uiEntry.ActionButton.interactable = interactable;
-            }
-
-            if (uiEntry.ActionButtonImage != null)
-            {
-                uiEntry.ActionButtonImage.color = interactable
-                    ? new Color(0.98f, 0.83f, 0.37f, 1f)
-                    : new Color(0.58f, 0.58f, 0.58f, 0.92f);
+                    uiEntry.IndicatorImage.sprite = null;
+                    uiEntry.IndicatorImage.gameObject.SetActive(false);
+                }
+                else
+                {
+                    uiEntry.IndicatorImage.sprite = indicatorSprite;
+                    uiEntry.IndicatorImage.color = Color.white;
+                    uiEntry.IndicatorImage.gameObject.SetActive(true);
+                }
             }
         }
 
@@ -511,16 +488,34 @@ namespace RainbowTower.CrystalSystem
             BindCrystalSlot(ManaColor.Cyan, "MiddleRow", "Cyan");
             BindCrystalSlot(ManaColor.White, "BottomRow", "White");
         }
-
         private TMP_FontAsset ResolveUiFont(RectTransform shelfPanel)
         {
-            var redLabelTransform = shelfPanel.Find("ShelfRows/TopRow/RedSlot/Label");
+            if (mainUiProvider != null)
+            {
+                if (mainUiProvider.HpLabel != null && mainUiProvider.HpLabel.font != null)
+                {
+                    return mainUiProvider.HpLabel.font;
+                }
+
+                if (mainUiProvider.WaveLabel != null && mainUiProvider.WaveLabel.font != null)
+                {
+                    return mainUiProvider.WaveLabel.font;
+                }
+            }
+
+            var redLabelTransform = shelfPanel.Find("ShelfRows/TopRow/RedSlot/ManaLabel");
             if (redLabelTransform != null && redLabelTransform.TryGetComponent<TextMeshProUGUI>(out var redLabel) && redLabel.font != null)
             {
                 return redLabel.font;
             }
 
-            return null;
+            var anyLabel = shelfPanel.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (anyLabel != null && anyLabel.font != null)
+            {
+                return anyLabel.font;
+            }
+
+            return TMP_Settings.defaultFontAsset;
         }
 
         private TMP_Text EnsureXpLabel(RectTransform shelfPanel)
@@ -561,118 +556,201 @@ namespace RainbowTower.CrystalSystem
                 return;
             }
 
-            var mainLabel = EnsureSlotLabel(slot, colorName);
-            var statusLabel = EnsureStatusLabel(slot);
-            var actionButton = EnsureActionButton(slot, out var actionImage);
-            var actionLabel = EnsureActionButtonLabel(actionButton.transform as RectTransform);
+            var iconImage = EnsureSlotIcon(slot, color);
+            var mainLabel = EnsureManaLabel(slot);
+            var levelLabel = EnsureLevelLabel(slot, color);
+            DisableStatusLabel(slot);
+            HideOldActionButton(slot);
+            var slotButton = EnsureSlotButton(slot, out var slotButtonGraphic);
+            var stateIndicator = EnsureStateIndicator(slot);
 
-            actionButton.onClick.RemoveAllListeners();
-            actionButton.onClick.AddListener(() => OnColorAction(color));
+            slotButton.onClick.RemoveAllListeners();
+            slotButton.onClick.AddListener(() => OnSlotPressed(color));
 
             uiEntriesByColor[color.ToIndex()] = new CrystalUiEntry
             {
                 MainLabel = mainLabel,
-                StatusLabel = statusLabel,
-                ActionButton = actionButton,
-                ActionButtonImage = actionImage,
-                ActionLabel = actionLabel
+                LevelLabel = levelLabel,
+                SlotButton = slotButton,
+                SlotButtonGraphic = slotButtonGraphic,
+                IndicatorImage = stateIndicator,
+                IconImage = iconImage
             };
         }
 
-        private TMP_Text EnsureSlotLabel(RectTransform slot, string colorName)
+        private Image EnsureSlotIcon(RectTransform slot, ManaColor color)
         {
-            var labelTransform = slot.Find("Label") as RectTransform;
+            var iconTransform = slot.Find("CrystalIcon") as RectTransform;
+            if (iconTransform == null)
+            {
+                var iconObject = new GameObject("CrystalIcon", typeof(RectTransform));
+                iconTransform = (RectTransform)iconObject.transform;
+                iconTransform.SetParent(slot, false);
+            }
+
+            iconTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            iconTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            iconTransform.anchoredPosition = new Vector2(0f, -18f);
+            iconTransform.sizeDelta = new Vector2(170f, 170f);
+            iconTransform.localScale = Vector3.one;
+
+            var iconImage = iconTransform.GetComponent<Image>();
+            if (iconImage == null)
+            {
+                iconImage = iconTransform.gameObject.AddComponent<Image>();
+            }
+
+            if (slot.TryGetComponent<Image>(out var slotBackground))
+            {
+                slotBackground.sprite = null;
+                slotBackground.color = new Color(1f, 1f, 1f, 0.01f);
+                slotBackground.raycastTarget = true;
+            }
+
+            if (crystalConfig != null && crystalConfig.TryGetDefinition(color, out var definition) && definition != null)
+            {
+                iconImage.sprite = definition.IconSprite;
+            }
+
+            iconImage.color = Color.white;
+            iconImage.type = Image.Type.Simple;
+            iconImage.preserveAspect = true;
+            return iconImage;
+        }
+
+        private TMP_Text EnsureManaLabel(RectTransform slot)
+        {
+            var labelTransform = slot.Find("ManaLabel") as RectTransform;
             if (labelTransform == null)
             {
-                var labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+                var labelObject = new GameObject("ManaLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
                 labelTransform = (RectTransform)labelObject.transform;
                 labelTransform.SetParent(slot, false);
             }
 
-            labelTransform.anchorMin = Vector2.zero;
-            labelTransform.anchorMax = Vector2.one;
-            labelTransform.offsetMin = new Vector2(10f, 56f);
-            labelTransform.offsetMax = new Vector2(-10f, -8f);
+            labelTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            labelTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            labelTransform.anchoredPosition = new Vector2(0f, -10f);
+            labelTransform.sizeDelta = new Vector2(120f, 56f);
             labelTransform.localScale = Vector3.one;
 
             var label = labelTransform.GetComponent<TextMeshProUGUI>();
-            ConfigureText(label, $"{colorName}\nM 0\nLv 1", 24f, FontStyles.Bold);
+            if (label == null)
+            {
+                label = labelTransform.gameObject.AddComponent<TextMeshProUGUI>();
+            }
+
+            ConfigureText(label, "0", 64f, FontStyles.Bold);
+            ApplyTextOutline(label, 0.15f, new Color(0f, 0f, 0f, 1f));
             label.alignment = TextAlignmentOptions.Center;
-            label.textWrappingMode = TextWrappingModes.Normal;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
             return label;
         }
 
-        private TMP_Text EnsureStatusLabel(RectTransform slot)
+        private TMP_Text EnsureLevelLabel(RectTransform slot, ManaColor color)
         {
-            var statusTransform = slot.Find("StatusLabel") as RectTransform;
-            if (statusTransform == null)
+            var levelTransform = slot.Find("LevelLabel") as RectTransform;
+            if (levelTransform == null)
             {
-                var statusObject = new GameObject("StatusLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
-                statusTransform = (RectTransform)statusObject.transform;
-                statusTransform.SetParent(slot, false);
+                var levelObject = new GameObject("LevelLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+                levelTransform = (RectTransform)levelObject.transform;
+                levelTransform.SetParent(slot, false);
             }
 
-            statusTransform.anchorMin = new Vector2(0f, 0f);
-            statusTransform.anchorMax = new Vector2(1f, 0f);
-            statusTransform.offsetMin = new Vector2(8f, 40f);
-            statusTransform.offsetMax = new Vector2(-8f, 72f);
-            statusTransform.localScale = Vector3.one;
+            levelTransform.anchorMin = new Vector2(0.5f, 0f);
+            levelTransform.anchorMax = new Vector2(0.5f, 0f);
+            levelTransform.anchoredPosition = new Vector2(0f, 20f);
+            levelTransform.sizeDelta = new Vector2(260f, 34f);
+            levelTransform.localScale = Vector3.one;
 
-            var status = statusTransform.GetComponent<TextMeshProUGUI>();
-            ConfigureText(status, "Locked", 20f, FontStyles.Bold);
-            status.alignment = TextAlignmentOptions.Center;
-            return status;
+            var levelLabel = levelTransform.GetComponent<TextMeshProUGUI>();
+            if (levelLabel == null)
+            {
+                levelLabel = levelTransform.gameObject.AddComponent<TextMeshProUGUI>();
+            }
+
+            ConfigureText(levelLabel, $"LV {Mathf.Max(1, GetCurrentLevel(color))}", 24f, FontStyles.Bold);
+            ApplyTextOutline(levelLabel, 0.15f, new Color(0f, 0f, 0f, 1f));
+            levelLabel.alignment = TextAlignmentOptions.Center;
+            levelLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            return levelLabel;
         }
 
-        private Button EnsureActionButton(RectTransform slot, out Image buttonImage)
+        private static void DisableStatusLabel(RectTransform slot)
         {
-            var buttonTransform = slot.Find("ActionButton") as RectTransform;
-            if (buttonTransform == null)
+            var statusTransform = slot.Find("StatusLabel");
+            if (statusTransform != null)
             {
-                var buttonObject = new GameObject("ActionButton", typeof(RectTransform), typeof(Image), typeof(Button));
-                buttonTransform = (RectTransform)buttonObject.transform;
-                buttonTransform.SetParent(slot, false);
+                statusTransform.gameObject.SetActive(false);
+            }
+        }
+
+        private static void HideOldActionButton(RectTransform slot)
+        {
+            var actionTransform = slot.Find("ActionButton");
+            if (actionTransform != null)
+            {
+                actionTransform.gameObject.SetActive(false);
+            }
+        }
+
+        private Button EnsureSlotButton(RectTransform slot, out Image slotButtonGraphic)
+        {
+            if (!slot.TryGetComponent<Image>(out slotButtonGraphic))
+            {
+                slotButtonGraphic = slot.gameObject.AddComponent<Image>();
             }
 
-            buttonTransform.anchorMin = new Vector2(0f, 0f);
-            buttonTransform.anchorMax = new Vector2(1f, 0f);
-            buttonTransform.offsetMin = new Vector2(8f, 6f);
-            buttonTransform.offsetMax = new Vector2(-8f, 36f);
-            buttonTransform.localScale = Vector3.one;
+            slotButtonGraphic.sprite = null;
+            slotButtonGraphic.color = new Color(1f, 1f, 1f, 0.02f);
+            slotButtonGraphic.raycastTarget = true;
+            slotButtonGraphic.type = Image.Type.Simple;
 
-            buttonImage = buttonTransform.GetComponent<Image>();
-            buttonImage.color = new Color(0.98f, 0.83f, 0.37f, 1f);
+            var button = slot.GetComponent<Button>();
+            if (button == null)
+            {
+                button = slot.gameObject.AddComponent<Button>();
+            }
 
-            var button = buttonTransform.GetComponent<Button>();
-            button.targetGraphic = buttonImage;
+            button.targetGraphic = slotButtonGraphic;
             return button;
         }
 
-        private TMP_Text EnsureActionButtonLabel(RectTransform buttonTransform)
+        private static Image EnsureStateIndicator(RectTransform slot)
         {
-            var labelTransform = buttonTransform.Find("Label") as RectTransform;
-            if (labelTransform == null)
+            var indicatorTransform = slot.Find("StateIndicator") as RectTransform;
+            if (indicatorTransform == null)
             {
-                var labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-                labelTransform = (RectTransform)labelObject.transform;
-                labelTransform.SetParent(buttonTransform, false);
+                var indicatorObject = new GameObject("StateIndicator", typeof(RectTransform), typeof(Image));
+                indicatorTransform = (RectTransform)indicatorObject.transform;
+                indicatorTransform.SetParent(slot, false);
             }
 
-            labelTransform.anchorMin = Vector2.zero;
-            labelTransform.anchorMax = Vector2.one;
-            labelTransform.offsetMin = new Vector2(2f, 0f);
-            labelTransform.offsetMax = new Vector2(-2f, 0f);
-            labelTransform.localScale = Vector3.one;
+            indicatorTransform.anchorMin = new Vector2(1f, 1f);
+            indicatorTransform.anchorMax = new Vector2(1f, 1f);
+            indicatorTransform.pivot = new Vector2(1f, 1f);
+            indicatorTransform.anchoredPosition = new Vector2(-18f, -18f);
+            indicatorTransform.sizeDelta = new Vector2(44f, 44f);
+            indicatorTransform.localScale = Vector3.one;
 
-            var label = labelTransform.GetComponent<TextMeshProUGUI>();
-            ConfigureText(label, "Unlock", 20f, FontStyles.Bold);
-            label.alignment = TextAlignmentOptions.Center;
-            label.color = new Color(0.24f, 0.15f, 0.08f, 1f);
-            return label;
+            var indicatorImage = indicatorTransform.GetComponent<Image>();
+            if (indicatorImage == null)
+            {
+                indicatorImage = indicatorTransform.gameObject.AddComponent<Image>();
+            }
+
+            indicatorImage.preserveAspect = true;
+            indicatorImage.raycastTarget = false;
+            indicatorImage.gameObject.SetActive(false);
+            return indicatorImage;
         }
-
         private void ConfigureText(TextMeshProUGUI text, string value, float size, FontStyles style)
         {
+            if (text == null)
+            {
+                return;
+            }
+
             if (uiFont != null)
             {
                 text.font = uiFont;
@@ -690,6 +768,38 @@ namespace RainbowTower.CrystalSystem
             text.margin = Vector4.zero;
         }
 
+        private static void ApplyTextOutline(TextMeshProUGUI text, float width, Color color)
+        {
+            if (text == null)
+            {
+                return;
+            }
+
+            text.outlineWidth = Mathf.Clamp01(width);
+            text.outlineColor = color;
+
+            var material = text.fontMaterial;
+            if (material != null)
+            {
+                material.EnableKeyword("OUTLINE_ON");
+
+                if (material.HasProperty(ShaderUtilities.ID_OutlineWidth))
+                {
+                    material.SetFloat(ShaderUtilities.ID_OutlineWidth, Mathf.Clamp01(width));
+                }
+
+                if (material.HasProperty(ShaderUtilities.ID_OutlineColor))
+                {
+                    material.SetColor(ShaderUtilities.ID_OutlineColor, color);
+                }
+
+                text.fontMaterial = material;
+            }
+
+            text.UpdateMeshPadding();
+            text.SetMaterialDirty();
+        }
+
         private bool HasUiBindings()
         {
             for (var index = 0; index < uiEntriesByColor.Length; index++)
@@ -703,35 +813,276 @@ namespace RainbowTower.CrystalSystem
             return true;
         }
 
-        private static string BuildDependencyLabel(ManaColor[] dependencies)
+        private bool CanAffordOrFree(int cost)
         {
-            if (dependencies == null || dependencies.Length == 0)
+            return cost <= 0 || progressionRuntimeManager.CanAfford(cost);
+        }
+
+        private void OpenUnlockPopup(ManaColor color, CrystalPrototypeConfig.BaseCrystalDefinition definition)
+        {
+            CloseActivePopup();
+            PauseGameplayForPopup();
+
+            var panel = CreatePopupPanel(out var overlayButton);
+            if (panel == null)
             {
-                return "Locked";
+                UnpauseGameplayAfterPopup();
+                return;
             }
 
-            var builder = new StringBuilder("Need ");
-            for (var index = 0; index < dependencies.Length; index++)
+            overlayButton.onClick.RemoveAllListeners();
+            overlayButton.onClick.AddListener(CloseActivePopup);
+
+            CreatePopupIcon(panel, definition.IconSprite);
+            var costText = CreatePopupText(panel, "UnlockCostLabel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-180f, -20f), new Vector2(180f, 40f), 44f);
+            costText.text = $"Cost {Mathf.Max(0, definition.UnlockCost)} XP";
+
+            var unlockButton = CreatePopupActionButton(panel, mainUiProvider != null ? mainUiProvider.UnlockPopupButtonSprite : null, "Unlock", new Vector2(-170f, 48f), new Vector2(170f, 138f));
+            unlockButton.interactable = true;
+            unlockButton.onClick.AddListener(() =>
             {
-                if (index > 0)
+                TryUnlock(color);
+                CloseActivePopup();
+                RefreshActionUi();
+            });
+        }
+
+        private void OpenUpgradePopup(ManaColor color, CrystalPrototypeConfig.BaseCrystalDefinition definition)
+        {
+            CloseActivePopup();
+            PauseGameplayForPopup();
+
+            var panel = CreatePopupPanel(out var overlayButton);
+            if (panel == null)
+            {
+                UnpauseGameplayAfterPopup();
+                return;
+            }
+
+            overlayButton.onClick.RemoveAllListeners();
+            overlayButton.onClick.AddListener(CloseActivePopup);
+
+            CreatePopupIcon(panel, definition.IconSprite);
+
+            var detailsText = CreatePopupText(panel, "UpgradeDetailsLabel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-220f, -86f), new Vector2(220f, 34f), 24f);
+            detailsText.alignment = TextAlignmentOptions.Center;
+            detailsText.textWrappingMode = TextWrappingModes.Normal;
+
+            var priceText = CreatePopupText(panel, "UpgradeCostLabel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-180f, -150f), new Vector2(180f, -90f), 40f);
+
+            var upgradeButton = CreatePopupActionButton(panel, mainUiProvider != null ? mainUiProvider.UpgradePopupButtonSprite : null, "Upgrade", new Vector2(-170f, 48f), new Vector2(170f, 138f));
+
+            var currentLevel = Mathf.Max(1, GetCurrentLevel(color));
+            var hasNextLevel = definition.Levels != null && currentLevel < definition.Levels.Length;
+            var currentData = hasNextLevel && currentLevel - 1 >= 0 ? definition.Levels[currentLevel - 1] : ResolveLevelData(color);
+            var nextData = hasNextLevel ? definition.Levels[currentLevel] : null;
+
+            if (hasNextLevel && currentData != null && nextData != null)
+            {
+                detailsText.text = BuildUpgradeDetails(currentData, nextData);
+                var upgradeCost = currentData.UpgradeCost;
+                priceText.text = $"Cost {Mathf.Max(0, upgradeCost)} XP";
+                upgradeButton.interactable = CanAffordOrFree(upgradeCost);
+                upgradeButton.onClick.AddListener(() =>
                 {
-                    builder.Append('+');
-                }
+                    TryUpgrade(color);
+                    CloseActivePopup();
+                    RefreshActionUi();
+                });
+            }
+            else
+            {
+                detailsText.text = "MAX LEVEL";
+                priceText.text = "Cost 0 XP";
+                upgradeButton.interactable = false;
+            }
+        }
 
-                builder.Append(dependencies[index]);
+        private static string BuildUpgradeDetails(CrystalPrototypeConfig.CrystalLevelData currentData, CrystalPrototypeConfig.CrystalLevelData nextData)
+        {
+            var builder = new StringBuilder();
+            builder.Append($"Damage <color=#82D862>{currentData.Damage}</color> -> <color=#82D862>{nextData.Damage}</color>\n");
+            builder.Append($"Regen <color=#82D862>{currentData.GenerationPerSecond:0.##}</color> -> <color=#82D862>{nextData.GenerationPerSecond:0.##}</color>\n");
+            builder.Append($"Cap <color=#82D862>{currentData.ManaCap}</color> -> <color=#82D862>{nextData.ManaCap}</color>");
+            return builder.ToString();
+        }
+
+        private RectTransform CreatePopupPanel(out Button overlayButton)
+        {
+            overlayButton = null;
+            if (mainUiProvider == null || mainUiProvider.PopupParent == null)
+            {
+                return null;
             }
 
-            return builder.ToString();
+            var overlayObject = new GameObject("CrystalActionPopupOverlay", typeof(RectTransform), typeof(Image), typeof(Button));
+            activePopupOverlay = (RectTransform)overlayObject.transform;
+            activePopupOverlay.SetParent(mainUiProvider.PopupParent, false);
+            activePopupOverlay.anchorMin = Vector2.zero;
+            activePopupOverlay.anchorMax = Vector2.one;
+            activePopupOverlay.offsetMin = Vector2.zero;
+            activePopupOverlay.offsetMax = Vector2.zero;
+            activePopupOverlay.localScale = Vector3.one;
+
+            var overlayImage = overlayObject.GetComponent<Image>();
+            overlayImage.color = new Color(0f, 0f, 0f, 0.7f);
+            overlayButton = overlayObject.GetComponent<Button>();
+            overlayButton.targetGraphic = overlayImage;
+
+            var panelObject = new GameObject("CrystalActionPopupPanel", typeof(RectTransform), typeof(Image));
+            var panel = (RectTransform)panelObject.transform;
+            panel.SetParent(activePopupOverlay, false);
+            panel.anchorMin = new Vector2(0.5f, 0.5f);
+            panel.anchorMax = new Vector2(0.5f, 0.5f);
+            panel.pivot = new Vector2(0.5f, 0.5f);
+            panel.sizeDelta = new Vector2(520f, 620f);
+            panel.anchoredPosition = Vector2.zero;
+            panel.localScale = Vector3.one;
+
+            var panelImage = panelObject.GetComponent<Image>();
+            panelImage.sprite = mainUiProvider != null ? mainUiProvider.PopupBackgroundSprite : null;
+            panelImage.color = panelImage.sprite != null ? Color.white : new Color(0.23f, 0.15f, 0.1f, 0.96f);
+            panelImage.type = Image.Type.Sliced;
+            panelImage.fillCenter = true;
+            panelImage.pixelsPerUnitMultiplier = 2.5f;
+            panelImage.raycastTarget = true;
+
+            return panel;
+        }
+
+        private static void CreatePopupIcon(RectTransform panel, Sprite iconSprite)
+        {
+            var iconObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            var iconRect = (RectTransform)iconObject.transform;
+            iconRect.SetParent(panel, false);
+            iconRect.anchorMin = new Vector2(0.5f, 1f);
+            iconRect.anchorMax = new Vector2(0.5f, 1f);
+            iconRect.pivot = new Vector2(0.5f, 1f);
+            iconRect.sizeDelta = new Vector2(220f, 220f);
+            iconRect.anchoredPosition = new Vector2(0f, -26f);
+            iconRect.localScale = Vector3.one;
+
+            var iconImage = iconObject.GetComponent<Image>();
+            iconImage.sprite = iconSprite;
+            iconImage.color = Color.white;
+            iconImage.preserveAspect = true;
+            iconImage.raycastTarget = false;
+        }
+
+        private TMP_Text CreatePopupText(RectTransform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax, float fontSize)
+        {
+            var textObject = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+            var rect = (RectTransform)textObject.transform;
+            rect.SetParent(parent, false);
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = offsetMin;
+            rect.offsetMax = offsetMax;
+            rect.localScale = Vector3.one;
+
+            var text = textObject.GetComponent<TextMeshProUGUI>();
+            ConfigureText(text, string.Empty, fontSize, FontStyles.Bold);
+            text.alignment = TextAlignmentOptions.Center;
+            text.color = new Color(1f, 0.92f, 0.8f, 1f);
+            return text;
+        }
+
+        private Button CreatePopupActionButton(RectTransform panel, Sprite buttonSprite, string label, Vector2 offsetMin, Vector2 offsetMax)
+        {
+            var buttonObject = new GameObject("ActionButton", typeof(RectTransform), typeof(Image), typeof(Button));
+            var buttonRect = (RectTransform)buttonObject.transform;
+            buttonRect.SetParent(panel, false);
+            buttonRect.anchorMin = new Vector2(0.5f, 0f);
+            buttonRect.anchorMax = new Vector2(0.5f, 0f);
+            buttonRect.pivot = new Vector2(0.5f, 0f);
+            buttonRect.offsetMin = offsetMin;
+            buttonRect.offsetMax = offsetMax;
+            buttonRect.localScale = Vector3.one;
+
+            var image = buttonObject.GetComponent<Image>();
+            image.sprite = buttonSprite;
+            image.type = Image.Type.Sliced;
+            image.fillCenter = true;
+            image.pixelsPerUnitMultiplier = 2.5f;
+            image.preserveAspect = false;
+            image.color = Color.white;
+
+            var button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = image;
+
+            var labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var labelRect = (RectTransform)labelObject.transform;
+            labelRect.SetParent(buttonRect, false);
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            labelRect.localScale = Vector3.one;
+
+            var labelText = labelObject.GetComponent<TextMeshProUGUI>();
+            ConfigureText(labelText, label, 44f, FontStyles.Bold);
+            labelText.alignment = TextAlignmentOptions.Center;
+            labelText.color = new Color(0.18f, 0.12f, 0.08f, 1f);
+
+            return button;
+        }
+
+        private void PauseGameplayForPopup()
+        {
+            if (isPopupOpen)
+            {
+                return;
+            }
+
+            storedTimeScale = Time.timeScale;
+            Time.timeScale = 0f;
+            isPopupOpen = true;
+        }
+
+        private void UnpauseGameplayAfterPopup()
+        {
+            if (!isPopupOpen)
+            {
+                return;
+            }
+
+            Time.timeScale = storedTimeScale;
+            isPopupOpen = false;
+        }
+
+        private void CloseActivePopup()
+        {
+            if (activePopupOverlay != null)
+            {
+                Object.Destroy(activePopupOverlay.gameObject);
+                activePopupOverlay = null;
+            }
+
+            UnpauseGameplayAfterPopup();
         }
 
         private sealed class CrystalUiEntry
         {
             public TMP_Text MainLabel;
-            public TMP_Text StatusLabel;
-            public Button ActionButton;
-            public Image ActionButtonImage;
-            public TMP_Text ActionLabel;
+            public TMP_Text LevelLabel;
+            public Button SlotButton;
+            public Image SlotButtonGraphic;
+            public Image IndicatorImage;
+            public Image IconImage;
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 

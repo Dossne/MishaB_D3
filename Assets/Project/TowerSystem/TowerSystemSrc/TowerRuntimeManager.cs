@@ -107,9 +107,10 @@ namespace RainbowTower.TowerSystem
 
             var damage = crystalRuntimeManager.GetShotDamage(manaColor) * Mathf.Max(1, damageMultiplier);
             var towerPosition = towerAnchor != null ? towerAnchor.position : Vector3.zero;
+            var shotOrigin = towerPosition + new Vector3(towerConfig.ShotOriginOffset.x, towerConfig.ShotOriginOffset.y, 0f);
             var targetPosition = targetEnemy.transform.position;
 
-            combatFeedbackRuntimeManager?.NotifyTowerShot(manaColor, towerPosition, targetPosition);
+            combatFeedbackRuntimeManager?.NotifyTowerShot(manaColor, shotOrigin, targetPosition);
 
             var killedEnemy = targetEnemy.ApplyDamage(damage);
             combatFeedbackRuntimeManager?.NotifyEnemyHit(targetPosition, manaColor, damage, killedEnemy);
@@ -147,3 +148,5 @@ namespace RainbowTower.TowerSystem
         }
     }
 }
+
+

@@ -13,4 +13,6 @@ MonoBehaviour:
   m_Name: TowerPrototypeConfig
   m_EditorClassIdentifier: 
   shotIntervalSeconds: 2
+  shotOriginOffset: {x: 0, y: 0.65}
+
 

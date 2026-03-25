@@ -17,7 +17,13 @@ MonoBehaviour:
   baseHp: 2
   baseRewardXp: 1
   enemyTint: {r: 0.22, g: 0.74, b: 0.29, a: 1}
-  enemyScale: {x: 6, y: 6}
+  enemyScale: {x: 0.2625, y: 0.2625}
+  enemySprites:
+  - {fileID: 21300000, guid: f3b553bbf41c82949818add506d27ed7, type: 3}
+  - {fileID: 21300000, guid: 0f7605e9b06da2445a26e2cb1937d753, type: 3}
+  - {fileID: 21300000, guid: 02a8cee6e2e26e349bcfe4e4cccbf170, type: 3}
+  - {fileID: 21300000, guid: e13aa23b8d8ae484e9802ad59b05bc0e, type: 3}
+
 
 
 

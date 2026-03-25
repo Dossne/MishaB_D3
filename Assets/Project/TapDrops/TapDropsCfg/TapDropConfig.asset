@@ -16,14 +16,22 @@ MonoBehaviour:
   spawnChancePerShot: 0.15
   maxSimultaneousDrops: 3
   lifetimeSeconds: 3
-  minSpawnRadiusWorld: 0.2
+  minSpawnRadiusWorld: 0.55
   maxSpawnRadiusWorld: 0.85
   tapRadiusWorld: 0.45
   dropPrefab: {fileID: 510000000000000003, guid: 4f8a0ae3aa2445ce905ea53ea0f5d1f8, type: 3}
-  dropWorldSize: 0.3
+  dropWorldSize: 0.45
   sortingOrder: -3
+  redDropSprite: {fileID: 21300000, guid: e112aa606fcb18a47ba83de91376513e, type: 3}
+  greenDropSprite: {fileID: 21300000, guid: f8346111227e8c64f96359a2febfe93d, type: 3}
+  blueDropSprite: {fileID: 21300000, guid: 7212b2289292bcd43b09c1edf30e6302, type: 3}
+  yellowDropSprite: {fileID: 21300000, guid: 1e57e139484807f42982a75ced67b2ca, type: 3}
+  magentaDropSprite: {fileID: 21300000, guid: f70357a822bcd314d8cfd736c2b08378, type: 3}
+  cyanDropSprite: {fileID: 21300000, guid: 9b780f7a1fb26d24fa98e1d74d4fefe9, type: 3}
+  whiteDropSprite: {fileID: -568200938951420237, guid: a5b9bb672c32ac34cbe3c4127933305a, type: 3}
   spawnFeedbackDuration: 0.14
   pulseScaleAmplitude: 0.1
   pulseFrequency: 6
   collectFeedbackDuration: 0.18
   expireFeedbackDuration: 0.2
+

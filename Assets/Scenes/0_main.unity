@@ -580,6 +580,7 @@ MonoBehaviour:
   magentaCrystalButtonSprite: {fileID: 21300000, guid: 2bf8e5e9320d46c49a60d62c9d3c5105, type: 3}
   cyanCrystalButtonSprite: {fileID: 21300000, guid: 2b78e413201b3554db4eb0b3a682369f, type: 3}
   whiteCrystalButtonSprite: {fileID: 21300000, guid: e0af77cc5f657fc47ad5d7833ec5522a, type: 3}
+  crystalSlotPrototype: {fileID: 910000000000000002, guid: 5b31e89a4f2a4cf1b6b53499a9db20cf, type: 3}
   unlockAllCrystalsCheatButton: {fileID: 0}
   defeatPopupRoot: {fileID: 0}
   defeatTitleLabel: {fileID: 0}
@@ -1018,7 +1019,3 @@ SceneRoots:
   - {fileID: 1700000011}
   - {fileID: 1700000021}
   - {fileID: 1700000031}
-
-
-
-

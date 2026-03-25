@@ -1,5 +1,7 @@
 using UnityEngine;
 
+using RainbowTower.ManaSystem;
+
 namespace RainbowTower.TapDrops
 {
     [DisallowMultipleComponent]
@@ -20,7 +22,9 @@ namespace RainbowTower.TapDrops
         private float pulseTimer;
 
         public void Initialize(
+            ManaColor manaColor,
             Color color,
+            Sprite dropSprite,
             float worldSize,
             int sortingOrder,
             float spawnFeedbackDuration,
@@ -31,7 +35,7 @@ namespace RainbowTower.TapDrops
         {
             EnsureRenderer();
 
-            baseColor = color;
+            baseColor = dropSprite != null ? new Color(1f, 1f, 1f, color.a) : color;
             baseAlpha = color.a;
             spawnDuration = Mathf.Max(0.03f, spawnFeedbackDuration);
             pulseScaleAmplitude = Mathf.Max(0f, pulseAmplitude);
@@ -42,7 +46,7 @@ namespace RainbowTower.TapDrops
             stateTimer = 0f;
             pulseTimer = 0f;
 
-            spriteRenderer.sprite = SpriteFactory.WhiteSprite;
+            spriteRenderer.sprite = ResolveSpriteForColor(manaColor, dropSprite);
             spriteRenderer.sortingOrder = sortingOrder;
             spriteRenderer.color = new Color(baseColor.r, baseColor.g, baseColor.b, 0f);
 
@@ -165,6 +169,16 @@ namespace RainbowTower.TapDrops
             }
         }
 
+        private static Sprite ResolveSpriteForColor(ManaColor manaColor, Sprite configuredSprite)
+        {
+            if (configuredSprite != null)
+            {
+                return configuredSprite;
+            }
+
+            return SpriteFactory.WhiteSprite;
+        }
+
         private static Vector3 GetScaleForSize(Sprite sprite, float worldSize)
         {
             var bounds = sprite != null ? sprite.bounds.size : Vector3.one;
@@ -205,3 +219,4 @@ namespace RainbowTower.TapDrops
         }
     }
 }
+

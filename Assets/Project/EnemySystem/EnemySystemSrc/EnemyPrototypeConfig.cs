@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace RainbowTower.EnemySystem
 {
@@ -13,6 +13,7 @@ namespace RainbowTower.EnemySystem
         [SerializeField] private int baseRewardXp = 1;
         [SerializeField] private Color enemyTint = new(0.22f, 0.74f, 0.29f, 1f);
         [SerializeField] private Vector2 enemyScale = new(6f, 6f);
+        [SerializeField] private Sprite[] enemySprites;
 
         public EnemyView EnemyPrefab => enemyPrefab;
         public float MoveSpeed => moveSpeed;
@@ -20,5 +21,7 @@ namespace RainbowTower.EnemySystem
         public int BaseRewardXp => baseRewardXp;
         public Color EnemyTint => enemyTint;
         public Vector2 EnemyScale => enemyScale;
+        public Sprite[] EnemySprites => enemySprites;
     }
 }
+

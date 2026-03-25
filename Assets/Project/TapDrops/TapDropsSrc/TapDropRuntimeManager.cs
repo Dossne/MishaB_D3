@@ -136,7 +136,9 @@ namespace RainbowTower.TapDrops
             }
 
             view.Initialize(
+                color,
                 TapDropConfig.GetColor(color),
+                tapDropConfig.GetDropSprite(color),
                 tapDropConfig.DropWorldSize,
                 tapDropConfig.SortingOrder,
                 tapDropConfig.SpawnFeedbackDuration,
@@ -327,3 +329,4 @@ namespace RainbowTower.TapDrops
         }
     }
 }
+
