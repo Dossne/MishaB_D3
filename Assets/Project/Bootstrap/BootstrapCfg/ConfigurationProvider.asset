@@ -20,6 +20,7 @@ MonoBehaviour:
   towerPrototypeConfig: {fileID: 11400000, guid: 48a85fe4d80f4469b3f1cedea8f117cf, type: 2}
   progressionPrototypeConfig: {fileID: 11400000, guid: 4514f05dfb0c4e0fa305a9b846286f3f, type: 2}
   combatFeedbackConfig: {fileID: 11400000, guid: c8f25b330bb348f6bf16d76d0d64e8b3, type: 2}
+  tapDropConfig: {fileID: 11400000, guid: 6f4d2d7dfb6b4f3c9c8e63215d2af2f1, type: 2}
   featureConfigurations:
   - {fileID: 11400000, guid: a4e6408d8f5548b6af5c3196cab698d0, type: 2}
   - {fileID: 11400000, guid: fcf1280c88b14a49af27c4181454294e, type: 2}
@@ -29,4 +30,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 48a85fe4d80f4469b3f1cedea8f117cf, type: 2}
   - {fileID: 11400000, guid: 4514f05dfb0c4e0fa305a9b846286f3f, type: 2}
   - {fileID: 11400000, guid: c8f25b330bb348f6bf16d76d0d64e8b3, type: 2}
-
+  - {fileID: 11400000, guid: 6f4d2d7dfb6b4f3c9c8e63215d2af2f1, type: 2}

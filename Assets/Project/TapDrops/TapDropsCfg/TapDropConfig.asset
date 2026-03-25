@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a5f7bf2b1ae42fbbc79bcadffc3bca1, type: 3}
+  m_Name: TapDropConfig
+  m_EditorClassIdentifier: 
+  isEnabled: 1
+  spawnChancePerShot: 0.15
+  maxSimultaneousDrops: 3
+  lifetimeSeconds: 3
+  minSpawnRadiusWorld: 0.2
+  maxSpawnRadiusWorld: 0.85
+  tapRadiusWorld: 0.45
+  dropPrefab: {fileID: 510000000000000003, guid: 4f8a0ae3aa2445ce905ea53ea0f5d1f8, type: 3}
+  dropWorldSize: 0.3
+  sortingOrder: -3
+  spawnFeedbackDuration: 0.14
+  pulseScaleAmplitude: 0.1
+  pulseFrequency: 6
+  collectFeedbackDuration: 0.18
+  expireFeedbackDuration: 0.2

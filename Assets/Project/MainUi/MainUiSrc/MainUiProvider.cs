@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using RainbowTower.ManaSystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -21,6 +23,8 @@ namespace RainbowTower.MainUi
         private const float ShelfZoneHeight = ReferenceHeight - GameFieldHeight - TopHudHeight;
         private const float ShelfTitleHeight = 72f;
         private const float ShelfSpacing = 12f;
+        private const float CrystalSpendTextLifetime = 0.55f;
+        private const float CrystalSpendTextRiseDistance = 42f;
 
         [Header("Font")]
         [SerializeField] private TMP_FontAsset uiFontAsset;
@@ -50,6 +54,8 @@ namespace RainbowTower.MainUi
         [SerializeField] private TMP_Text defeatMessageLabel;
         [SerializeField] private Button restartButton;
         [SerializeField] private TMP_Text restartButtonLabel;
+
+        private readonly List<CrystalSpendFloatingTextEntry> activeCrystalSpendTexts = new();
 
         public RectTransform FloatingTextParent => floatingTextParent;
         public RectTransform HudParent => hudParent;
@@ -112,6 +118,49 @@ namespace RainbowTower.MainUi
             {
                 whiteCrystalLabel.text = FormatBaseCrystalLabel("White", whiteMana, whiteLevel);
             }
+        }
+        public void ShowCrystalSpendFloatingText(ManaColor color, int amount)
+        {
+            if (amount <= 0 || floatingTextParent == null)
+            {
+                return;
+            }
+
+            var crystalLabel = GetCrystalLabelByColor(color);
+            if (crystalLabel == null)
+            {
+                return;
+            }
+
+            var textObject = new GameObject("CrystalSpendText", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var textRect = (RectTransform)textObject.transform;
+            textRect.SetParent(floatingTextParent, false);
+            textRect.anchorMin = new Vector2(0.5f, 0.5f);
+            textRect.anchorMax = new Vector2(0.5f, 0.5f);
+            textRect.pivot = new Vector2(0.5f, 0.5f);
+            textRect.localScale = Vector3.one;
+            textRect.sizeDelta = new Vector2(220f, 52f);
+
+            var localStartPosition = floatingTextParent.InverseTransformPoint(crystalLabel.rectTransform.position);
+            textRect.anchoredPosition = new Vector2(localStartPosition.x, localStartPosition.y + 10f);
+
+            var text = textObject.GetComponent<TextMeshProUGUI>();
+            text.font = uiFontAsset != null ? uiFontAsset : TMP_Settings.defaultFontAsset;
+            text.fontSize = 28f;
+            text.fontStyle = FontStyles.Bold;
+            text.alignment = TextAlignmentOptions.Center;
+            text.text = $"-{amount}";
+            text.color = new Color(1f, 0.78f, 0.4f, 1f);
+            text.raycastTarget = false;
+
+            activeCrystalSpendTexts.Add(new CrystalSpendFloatingTextEntry
+            {
+                Text = text,
+                StartPosition = textRect.anchoredPosition,
+                EndPosition = textRect.anchoredPosition + new Vector2(0f, CrystalSpendTextRiseDistance),
+                RemainingLifetime = CrystalSpendTextLifetime,
+                TotalLifetime = CrystalSpendTextLifetime
+            });
         }
 
         public void BindUnlockAllCrystalsCheat(Action onClick)
@@ -199,6 +248,11 @@ namespace RainbowTower.MainUi
             HideDefeatPopup();
         }
 
+        private void Update()
+        {
+            TickCrystalSpendFloatingTexts(Time.unscaledDeltaTime);
+        }
+
         private void EnsureCanvasSetup()
         {
             var root = (RectTransform)transform;
@@ -226,6 +280,10 @@ namespace RainbowTower.MainUi
             floatingTextParent = EnsureChildRoot(floatingTextParent, "FloatingTextParent");
             hudParent = EnsureChildRoot(hudParent, "HudParent");
             popupParent = EnsureChildRoot(popupParent, "PopupParent");
+
+            hudParent.SetSiblingIndex(0);
+            floatingTextParent.SetSiblingIndex(1);
+            popupParent.SetSiblingIndex(2);
 
             BuildHud();
             BuildCrystalShelf();
@@ -620,6 +678,52 @@ namespace RainbowTower.MainUi
             return textComponent;
         }
 
+        private void TickCrystalSpendFloatingTexts(float deltaTime)
+        {
+            for (var index = activeCrystalSpendTexts.Count - 1; index >= 0; index--)
+            {
+                var entry = activeCrystalSpendTexts[index];
+                if (entry.Text == null)
+                {
+                    activeCrystalSpendTexts.RemoveAt(index);
+                    continue;
+                }
+
+                entry.RemainingLifetime -= deltaTime;
+                if (entry.RemainingLifetime <= 0f)
+                {
+                    Destroy(entry.Text.gameObject);
+                    activeCrystalSpendTexts.RemoveAt(index);
+                    continue;
+                }
+
+                var progress = 1f - entry.RemainingLifetime / entry.TotalLifetime;
+                var rectTransform = entry.Text.rectTransform;
+                rectTransform.anchoredPosition = Vector2.Lerp(entry.StartPosition, entry.EndPosition, progress);
+
+                var color = entry.Text.color;
+                color.a = Mathf.Lerp(1f, 0f, progress);
+                entry.Text.color = color;
+
+                activeCrystalSpendTexts[index] = entry;
+            }
+        }
+
+        private TMP_Text GetCrystalLabelByColor(ManaColor color)
+        {
+            return color switch
+            {
+                ManaColor.Red => redCrystalLabel,
+                ManaColor.Green => greenCrystalLabel,
+                ManaColor.Blue => blueCrystalLabel,
+                ManaColor.Yellow => yellowCrystalLabel,
+                ManaColor.Magenta => magentaCrystalLabel,
+                ManaColor.Cyan => cyanCrystalLabel,
+                ManaColor.White => whiteCrystalLabel,
+                _ => null
+            };
+        }
+
         private Button FindButton(RectTransform root, string childName)
         {
             var child = root.Find(childName);
@@ -663,6 +767,15 @@ namespace RainbowTower.MainUi
         private static string FormatBaseCrystalLabel(string crystalName, int mana, int level)
         {
             return $"{crystalName}\nM {Mathf.Max(0, mana)}\nLv {Mathf.Max(1, level)}";
+        }
+
+        private struct CrystalSpendFloatingTextEntry
+        {
+            public TextMeshProUGUI Text;
+            public Vector2 StartPosition;
+            public Vector2 EndPosition;
+            public float RemainingLifetime;
+            public float TotalLifetime;
         }
 
         private Color GetCrystalColor(string crystalName)

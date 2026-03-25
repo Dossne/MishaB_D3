@@ -5,6 +5,7 @@ using RainbowTower.EnemySystem;
 using RainbowTower.GameplayField;
 using RainbowTower.ManaSystem;
 using RainbowTower.ProgressionSystem;
+using RainbowTower.TapDrops;
 using RainbowTower.TowerSystem;
 using RainbowTower.WaveSystem;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace RainbowTower.Bootstrap
         [SerializeField] private TowerPrototypeConfig towerPrototypeConfig;
         [SerializeField] private ProgressionPrototypeConfig progressionPrototypeConfig;
         [SerializeField] private CombatFeedbackConfig combatFeedbackConfig;
+        [SerializeField] private TapDropConfig tapDropConfig;
         [SerializeField] private ScriptableObject[] featureConfigurations = Array.Empty<ScriptableObject>();
 
         public GameplayFieldLayoutConfig GameplayFieldLayoutConfig => gameplayFieldLayoutConfig;
@@ -34,6 +36,7 @@ namespace RainbowTower.Bootstrap
         public TowerPrototypeConfig TowerPrototypeConfig => towerPrototypeConfig;
         public ProgressionPrototypeConfig ProgressionPrototypeConfig => progressionPrototypeConfig;
         public CombatFeedbackConfig CombatFeedbackConfig => combatFeedbackConfig;
+        public TapDropConfig TapDropConfig => tapDropConfig;
 
         public TConfig GetConfiguration<TConfig>() where TConfig : ScriptableObject
         {
@@ -77,6 +80,11 @@ namespace RainbowTower.Bootstrap
                 return typedCombatFeedbackConfig;
             }
 
+            if (tapDropConfig is TConfig typedTapDropConfig)
+            {
+                return typedTapDropConfig;
+            }
+
             for (var index = 0; index < featureConfigurations.Length; index++)
             {
                 if (featureConfigurations[index] is TConfig typedConfiguration)
@@ -89,4 +97,3 @@ namespace RainbowTower.Bootstrap
         }
     }
 }
-

@@ -38,6 +38,7 @@ namespace RainbowTower.ManaSystem
             var spent = TrySpendManaInternal(color, amount);
             if (spent)
             {
+                mainUiProvider?.ShowCrystalSpendFloatingText(color, amount);
                 UpdateCrystalPanels();
             }
 
@@ -277,7 +278,3 @@ namespace RainbowTower.ManaSystem
         }
     }
 }
-
-
-
-

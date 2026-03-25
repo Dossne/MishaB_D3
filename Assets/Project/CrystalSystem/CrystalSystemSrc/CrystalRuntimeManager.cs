@@ -48,6 +48,29 @@ namespace RainbowTower.CrystalSystem
             return unlockedByColor[color.ToIndex()];
         }
 
+        public int FillUnlockedColors(ManaColor[] outputBuffer)
+        {
+            if (outputBuffer == null || outputBuffer.Length == 0)
+            {
+                return 0;
+            }
+
+            var writeIndex = 0;
+            for (var index = 0; index < ManaColorUtility.AllColors.Length && writeIndex < outputBuffer.Length; index++)
+            {
+                var color = ManaColorUtility.AllColors[index];
+                if (!IsUnlocked(color))
+                {
+                    continue;
+                }
+
+                outputBuffer[writeIndex] = color;
+                writeIndex++;
+            }
+
+            return writeIndex;
+        }
+
         public int GetUnlockedBaseCrystalCount()
         {
             var unlockedCount = 0;
@@ -711,3 +734,4 @@ namespace RainbowTower.CrystalSystem
         }
     }
 }
+

@@ -5,6 +5,7 @@ using RainbowTower.EnemySystem;
 using RainbowTower.GameplayField;
 using RainbowTower.ManaSystem;
 using RainbowTower.ProgressionSystem;
+using RainbowTower.TapDrops;
 using UnityEngine;
 
 namespace RainbowTower.TowerSystem
@@ -16,6 +17,7 @@ namespace RainbowTower.TowerSystem
         private readonly CrystalRuntimeManager crystalRuntimeManager;
         private readonly ProgressionRuntimeManager progressionRuntimeManager;
         private readonly CombatFeedbackRuntimeManager combatFeedbackRuntimeManager;
+        private readonly TapDropRuntimeManager tapDropRuntimeManager;
 
         private TowerPrototypeConfig towerConfig;
         private Transform towerAnchor;
@@ -27,13 +29,15 @@ namespace RainbowTower.TowerSystem
             ManaRuntimeManager manaRuntimeManager,
             CrystalRuntimeManager crystalRuntimeManager,
             ProgressionRuntimeManager progressionRuntimeManager,
-            CombatFeedbackRuntimeManager combatFeedbackRuntimeManager)
+            CombatFeedbackRuntimeManager combatFeedbackRuntimeManager,
+            TapDropRuntimeManager tapDropRuntimeManager)
         {
             this.enemyRuntimeManager = enemyRuntimeManager;
             this.manaRuntimeManager = manaRuntimeManager;
             this.crystalRuntimeManager = crystalRuntimeManager;
             this.progressionRuntimeManager = progressionRuntimeManager;
             this.combatFeedbackRuntimeManager = combatFeedbackRuntimeManager;
+            this.tapDropRuntimeManager = tapDropRuntimeManager;
         }
 
         public void Initialize(ServiceLocator serviceLocator)
@@ -87,13 +91,21 @@ namespace RainbowTower.TowerSystem
                 return;
             }
 
-            if (!manaRuntimeManager.TrySpendMana(manaColor, 1))
+            var manaCost = 1;
+            var damageMultiplier = 1;
+            tapDropRuntimeManager?.ResolveShotModifierForNextShot(
+                manaColor,
+                manaRuntimeManager.GetCurrentMana(manaColor),
+                out manaCost,
+                out damageMultiplier);
+
+            if (!manaRuntimeManager.TrySpendMana(manaColor, manaCost))
             {
                 combatFeedbackRuntimeManager?.NotifyInsufficientMana();
                 return;
             }
 
-            var damage = crystalRuntimeManager.GetShotDamage(manaColor);
+            var damage = crystalRuntimeManager.GetShotDamage(manaColor) * Mathf.Max(1, damageMultiplier);
             var towerPosition = towerAnchor != null ? towerAnchor.position : Vector3.zero;
             var targetPosition = targetEnemy.transform.position;
 
@@ -101,6 +113,8 @@ namespace RainbowTower.TowerSystem
 
             var killedEnemy = targetEnemy.ApplyDamage(damage);
             combatFeedbackRuntimeManager?.NotifyEnemyHit(targetPosition, manaColor, damage, killedEnemy);
+
+            tapDropRuntimeManager?.TrySpawnDropFromShot(towerPosition);
 
             if (killedEnemy)
             {
@@ -133,4 +147,3 @@ namespace RainbowTower.TowerSystem
         }
     }
 }
-

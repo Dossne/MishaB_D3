@@ -6,6 +6,7 @@ using RainbowTower.EnemySystem;
 using RainbowTower.GameplayField;
 using RainbowTower.ManaSystem;
 using RainbowTower.ProgressionSystem;
+using RainbowTower.TapDrops;
 using RainbowTower.TowerSystem;
 using RainbowTower.WaveSystem;
 using UnityEngine;
@@ -100,18 +101,21 @@ namespace RainbowTower.Bootstrap
             var manaRuntimeManager = new ManaRuntimeManager(crystalRuntimeManager, combatFeedbackRuntimeManager);
             var enemyRuntimeManager = new EnemyRuntimeManager();
             var waveRuntimeManager = new WaveRuntimeManager(enemyRuntimeManager, progressionRuntimeManager);
+            var tapDropRuntimeManager = new TapDropRuntimeManager(manaRuntimeManager, crystalRuntimeManager);
             var towerRuntimeManager = new TowerRuntimeManager(
                 enemyRuntimeManager,
                 manaRuntimeManager,
                 crystalRuntimeManager,
                 progressionRuntimeManager,
-                combatFeedbackRuntimeManager);
+                combatFeedbackRuntimeManager,
+                tapDropRuntimeManager);
 
             RegisterRuntimeManager(progressionRuntimeManager);
             RegisterRuntimeManager(crystalRuntimeManager);
             RegisterRuntimeManager(manaRuntimeManager);
             RegisterRuntimeManager(enemyRuntimeManager);
             RegisterRuntimeManager(waveRuntimeManager);
+            RegisterRuntimeManager(tapDropRuntimeManager);
             RegisterRuntimeManager(towerRuntimeManager);
             RegisterRuntimeManager(combatFeedbackRuntimeManager);
         }
