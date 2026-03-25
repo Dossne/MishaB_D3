@@ -20,8 +20,10 @@ MonoBehaviour:
   fieldTopPixels: 180
   fieldHeightPixels: 1010
   fieldSideInsetPixels: 23
+  fieldBackgroundSprite: {fileID: 21300000, guid: 158f7661e1f4f53468f2916f04fbd151, type: 3}
   roadInsetPixels: 10
   roadThicknessPixels: 145
+  sideRouteInsetPixels: 32.5
   portalCenterOffsetPixels: 145
   portalSizePixels: {x: 92, y: 170}
   towerBaseSizePixels: {x: 190, y: 250}
@@ -35,3 +37,4 @@ MonoBehaviour:
   towerBaseColor: {r: 0.56, g: 0.47, b: 0.32, a: 1}
   towerCoreColor: {r: 0.9, g: 0.88, b: 0.8, a: 1}
   shadowColor: {r: 0, g: 0, b: 0, a: 0.18}
+

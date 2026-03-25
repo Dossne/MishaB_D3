@@ -20,8 +20,10 @@ namespace RainbowTower.GameplayField
         [SerializeField] private float fieldTopPixels = 155f;
         [SerializeField] private float fieldHeightPixels = 1080f;
         [SerializeField] private float fieldSideInsetPixels = 4f;
+        [SerializeField] private Sprite fieldBackgroundSprite;
         [SerializeField] private float roadInsetPixels = 8f;
         [SerializeField] private float roadThicknessPixels = 150f;
+        [SerializeField] private float sideRouteInsetPixels = 65f;
         [SerializeField] private float portalCenterOffsetPixels = 145f;
         [SerializeField] private Vector2 portalSizePixels = new(92f, 170f);
         [SerializeField] private Vector2 towerBaseSizePixels = new(190f, 250f);
@@ -46,8 +48,10 @@ namespace RainbowTower.GameplayField
         public float FieldTopPixels => fieldTopPixels;
         public float FieldHeightPixels => fieldHeightPixels;
         public float FieldSideInsetPixels => fieldSideInsetPixels;
+        public Sprite FieldBackgroundSprite => fieldBackgroundSprite;
         public float RoadInsetPixels => roadInsetPixels;
         public float RoadThicknessPixels => roadThicknessPixels;
+        public float SideRouteInsetPixels => sideRouteInsetPixels;
         public float PortalCenterOffsetPixels => portalCenterOffsetPixels;
         public Vector2 PortalSizePixels => portalSizePixels;
         public Vector2 TowerBaseSizePixels => towerBaseSizePixels;
@@ -63,3 +67,4 @@ namespace RainbowTower.GameplayField
         public Color ShadowColor => shadowColor;
     }
 }
+

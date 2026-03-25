@@ -6,6 +6,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace RainbowTower.MainUi
 {
@@ -23,6 +26,7 @@ namespace RainbowTower.MainUi
         private const float ShelfZoneHeight = ReferenceHeight - GameFieldHeight - TopHudHeight;
         private const float ShelfTitleHeight = 72f;
         private const float ShelfSpacing = 12f;
+        private const float CrystalShelfPanelHeight = 755f;
         private const float CrystalSpendTextLifetime = 0.55f;
         private const float CrystalSpendTextRiseDistance = 42f;
 
@@ -46,6 +50,14 @@ namespace RainbowTower.MainUi
         [SerializeField] private TMP_Text magentaCrystalLabel;
         [SerializeField] private TMP_Text cyanCrystalLabel;
         [SerializeField] private TMP_Text whiteCrystalLabel;
+        [SerializeField] private Sprite crystalShelfBackgroundSprite;
+        [SerializeField] private Sprite redCrystalButtonSprite;
+        [SerializeField] private Sprite greenCrystalButtonSprite;
+        [SerializeField] private Sprite blueCrystalButtonSprite;
+        [SerializeField] private Sprite yellowCrystalButtonSprite;
+        [SerializeField] private Sprite magentaCrystalButtonSprite;
+        [SerializeField] private Sprite cyanCrystalButtonSprite;
+        [SerializeField] private Sprite whiteCrystalButtonSprite;
         [SerializeField] private Button unlockAllCrystalsCheatButton;
 
         [Header("Defeat Popup")]
@@ -240,8 +252,37 @@ namespace RainbowTower.MainUi
             }
         }
 
+        private void OnValidate()
+        {
+#if UNITY_EDITOR
+            EnsureCrystalSpritesAssignedInEditor();
+#endif
+        }
+
+#if UNITY_EDITOR
+        private void EnsureCrystalSpritesAssignedInEditor()
+        {
+            crystalShelfBackgroundSprite = LoadSpriteIfMissing(crystalShelfBackgroundSprite, "Assets/Project/GameplayField/GameplayFieldArt/shelf.png");
+            redCrystalButtonSprite = LoadSpriteIfMissing(redCrystalButtonSprite, "Assets/Project/CrystalSystem/CrystalSystemArt/mana_crystal_red.png");
+            greenCrystalButtonSprite = LoadSpriteIfMissing(greenCrystalButtonSprite, "Assets/Project/CrystalSystem/CrystalSystemArt/mana_crystal_green.png");
+            blueCrystalButtonSprite = LoadSpriteIfMissing(blueCrystalButtonSprite, "Assets/Project/CrystalSystem/CrystalSystemArt/mana_crystal_blue.png");
+            yellowCrystalButtonSprite = LoadSpriteIfMissing(yellowCrystalButtonSprite, "Assets/Project/CrystalSystem/CrystalSystemArt/mana_crystal_yellow.png");
+            magentaCrystalButtonSprite = LoadSpriteIfMissing(magentaCrystalButtonSprite, "Assets/Project/CrystalSystem/CrystalSystemArt/mana_crystal_magenta.png");
+            cyanCrystalButtonSprite = LoadSpriteIfMissing(cyanCrystalButtonSprite, "Assets/Project/CrystalSystem/CrystalSystemArt/mana_crystal_cyan.png");
+            whiteCrystalButtonSprite = LoadSpriteIfMissing(whiteCrystalButtonSprite, "Assets/Project/CrystalSystem/CrystalSystemArt/mana_crystal_white.png");
+        }
+
+        private static Sprite LoadSpriteIfMissing(Sprite current, string assetPath)
+        {
+            return current != null ? current : AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+        }
+#endif
+
         private void Awake()
         {
+#if UNITY_EDITOR
+            EnsureCrystalSpritesAssignedInEditor();
+#endif
             EnsureCanvasSetup();
             EnsureEventSystem();
             EnsureHierarchy();
@@ -359,8 +400,12 @@ namespace RainbowTower.MainUi
 
         private void BuildCrystalShelf()
         {
-            if (hudParent.Find("CrystalShelfPanel") != null)
+            var existingShelfPanel = hudParent.Find("CrystalShelfPanel") as RectTransform;
+            if (existingShelfPanel != null)
             {
+                ApplyCrystalShelfLayout(existingShelfPanel);
+                ApplyCrystalShelfBackground(existingShelfPanel);
+                ApplyCrystalSlotSprites(existingShelfPanel);
                 unlockAllCrystalsCheatButton = FindButton(hudParent, "CrystalShelfPanel/UnlockAllCheatButton");
                 return;
             }
@@ -373,6 +418,8 @@ namespace RainbowTower.MainUi
                 new Vector2(1f, 0f),
                 new Vector2(OuterMargin, OuterMargin),
                 new Vector2(-OuterMargin, OuterMargin + ShelfZoneHeight));
+            ApplyCrystalShelfLayout(shelfPanel);
+            ApplyCrystalShelfBackground(shelfPanel);
 
             CreateAnchoredText(
                 "ShelfTitle",
@@ -425,6 +472,39 @@ namespace RainbowTower.MainUi
             CreateCrystalRow("TopRow", rowsTransform, true, "Red", "Green", "Blue");
             CreateCrystalRow("MiddleRow", rowsTransform, false, "Yellow", "Magenta", "Cyan");
             CreateCrystalRow("BottomRow", rowsTransform, false, "White");
+            ApplyCrystalSlotSprites(shelfPanel);
+        }
+
+        private void ApplyCrystalSlotSprites(RectTransform shelfPanel)
+        {
+            if (shelfPanel == null)
+            {
+                return;
+            }
+
+            ApplyCrystalSlotSprite(shelfPanel, "RedSlot", "Red");
+            ApplyCrystalSlotSprite(shelfPanel, "GreenSlot", "Green");
+            ApplyCrystalSlotSprite(shelfPanel, "BlueSlot", "Blue");
+            ApplyCrystalSlotSprite(shelfPanel, "YellowSlot", "Yellow");
+            ApplyCrystalSlotSprite(shelfPanel, "MagentaSlot", "Magenta");
+            ApplyCrystalSlotSprite(shelfPanel, "CyanSlot", "Cyan");
+            ApplyCrystalSlotSprite(shelfPanel, "WhiteSlot", "White");
+        }
+
+        private void ApplyCrystalSlotSprite(RectTransform shelfPanel, string slotName, string crystalName)
+        {
+            var slot = FindDescendantRectTransformByName(shelfPanel, slotName);
+            if (slot == null || !slot.TryGetComponent<Image>(out var image))
+            {
+                return;
+            }
+
+            var sprite = GetCrystalButtonSprite(crystalName);
+            image.sprite = sprite;
+            image.color = Color.white;
+            image.type = Image.Type.Simple;
+            image.preserveAspect = true;
+
         }
 
         private void EnsureDefeatPopup()
@@ -497,6 +577,40 @@ namespace RainbowTower.MainUi
             restartButtonLabel.color = new Color(0.24f, 0.13f, 0.08f, 1f);
 
             defeatPopupRoot.gameObject.SetActive(false);
+        }
+
+        private void ApplyCrystalShelfLayout(RectTransform shelfPanel)
+        {
+            if (shelfPanel == null)
+            {
+                return;
+            }
+
+            shelfPanel.anchorMin = new Vector2(0f, 0f);
+            shelfPanel.anchorMax = new Vector2(1f, 0f);
+            shelfPanel.pivot = new Vector2(0.5f, 0f);
+            shelfPanel.offsetMin = new Vector2(0f, 0f);
+            shelfPanel.offsetMax = new Vector2(0f, CrystalShelfPanelHeight);
+            shelfPanel.localScale = Vector3.one;
+            shelfPanel.localRotation = Quaternion.identity;
+        }
+
+        private void ApplyCrystalShelfBackground(RectTransform shelfPanel)
+        {
+            if (shelfPanel == null)
+            {
+                return;
+            }
+
+            var image = shelfPanel.GetComponent<Image>();
+            if (image == null || crystalShelfBackgroundSprite == null)
+            {
+                return;
+            }
+
+            image.sprite = crystalShelfBackgroundSprite;
+            image.color = Color.white;
+            image.type = Image.Type.Simple;
         }
 
         private void AssignTopHudReferences()
@@ -646,7 +760,11 @@ namespace RainbowTower.MainUi
             layoutElement.preferredHeight = 0f;
 
             var image = slotObject.GetComponent<Image>();
-            image.color = Color.Lerp(GetCrystalColor(crystalName), new Color(0.3f, 0.18f, 0.08f, 1f), 0.22f);
+            var crystalSprite = GetCrystalButtonSprite(crystalName);
+            image.sprite = crystalSprite;
+            image.color = Color.white;
+            image.type = Image.Type.Simple;
+            image.preserveAspect = true;
 
             var labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
             var labelTransform = (RectTransform)labelObject.transform;
@@ -733,6 +851,30 @@ namespace RainbowTower.MainUi
             }
 
             return null;
+        }
+        private static RectTransform FindDescendantRectTransformByName(Transform root, string childName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            for (var index = 0; index < root.childCount; index++)
+            {
+                var child = root.GetChild(index);
+                if (child.name.Equals(childName, StringComparison.Ordinal))
+                {
+                    return child as RectTransform;
+                }
+
+                var nested = FindDescendantRectTransformByName(child, childName);
+                if (nested != null)
+                {
+                    return nested;
+                }
+            }
+
+            return null;
         }
 
         private TMP_Text FindText(RectTransform root, string childName)
@@ -764,6 +906,21 @@ namespace RainbowTower.MainUi
             return null;
         }
 
+        private Sprite GetCrystalButtonSprite(string crystalName)
+        {
+            return crystalName switch
+            {
+                "Red" => redCrystalButtonSprite,
+                "Green" => greenCrystalButtonSprite,
+                "Blue" => blueCrystalButtonSprite,
+                "Yellow" => yellowCrystalButtonSprite,
+                "Magenta" => magentaCrystalButtonSprite,
+                "Cyan" => cyanCrystalButtonSprite,
+                "White" => whiteCrystalButtonSprite,
+                _ => null
+            };
+        }
+
         private static string FormatBaseCrystalLabel(string crystalName, int mana, int level)
         {
             return $"{crystalName}\nM {Mathf.Max(0, mana)}\nLv {Mathf.Max(1, level)}";
@@ -778,19 +935,10 @@ namespace RainbowTower.MainUi
             public float TotalLifetime;
         }
 
-        private Color GetCrystalColor(string crystalName)
-        {
-            return crystalName switch
-            {
-                "Red" => new Color(0.86f, 0.22f, 0.26f, 1f),
-                "Green" => new Color(0.22f, 0.72f, 0.34f, 1f),
-                "Blue" => new Color(0.2f, 0.45f, 0.9f, 1f),
-                "Yellow" => new Color(0.92f, 0.78f, 0.2f, 1f),
-                "Magenta" => new Color(0.82f, 0.24f, 0.7f, 1f),
-                "Cyan" => new Color(0.18f, 0.78f, 0.82f, 1f),
-                "White" => new Color(0.95f, 0.94f, 0.88f, 1f),
-                _ => new Color(0.3f, 0.3f, 0.3f, 1f)
-            };
-        }
     }
 }
+
+
+
+
+

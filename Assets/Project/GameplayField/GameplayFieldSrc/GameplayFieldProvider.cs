@@ -12,6 +12,7 @@ namespace RainbowTower.GameplayField
         private const int PortalOrder = -9;
         private const int TowerShadowOrder = -8;
         private const int TowerOrder = -7;
+        private const float FieldBackgroundScale = 0.55f;
 
         [Header("Scene Anchors")]
         [SerializeField] private Transform fieldVisualRoot;
@@ -100,13 +101,14 @@ namespace RainbowTower.GameplayField
 
             var roadInsetWorld = layoutConfig.RoadInsetPixels * pixelsToWorldX;
             var roadThicknessWorld = layoutConfig.RoadThicknessPixels * pixelsToWorldX;
-            var innerSize = new Vector2(
-                outerSize.x - 2f * (roadInsetWorld + roadThicknessWorld),
-                outerSize.y - 2f * (layoutConfig.RoadInsetPixels * pixelsToWorldY + layoutConfig.RoadThicknessPixels * pixelsToWorldY));
             var topLaneY = outerSize.y * 0.5f - layoutConfig.RoadInsetPixels * pixelsToWorldY - layoutConfig.RoadThicknessPixels * pixelsToWorldY * 0.5f;
             var bottomLaneY = -outerSize.y * 0.5f + layoutConfig.RoadInsetPixels * pixelsToWorldY + layoutConfig.RoadThicknessPixels * pixelsToWorldY * 0.5f;
             var leftLaneX = -outerSize.x * 0.5f + roadInsetWorld + roadThicknessWorld * 0.5f;
             var rightLaneX = outerSize.x * 0.5f - roadInsetWorld - roadThicknessWorld * 0.5f;
+            var maxSideRouteInsetWorld = Mathf.Max(0f, (rightLaneX - leftLaneX) * 0.5f - roadThicknessWorld * 0.5f);
+            var sideRouteInsetWorld = Mathf.Min(layoutConfig.SideRouteInsetPixels * pixelsToWorldX, maxSideRouteInsetWorld);
+            leftLaneX += sideRouteInsetWorld;
+            rightLaneX -= sideRouteInsetWorld;
 
             var portalOffsetX = layoutConfig.PortalCenterOffsetPixels * pixelsToWorldX;
             var portalSize = new Vector2(layoutConfig.PortalSizePixels.x * pixelsToWorldX, layoutConfig.PortalSizePixels.y * pixelsToWorldY);
@@ -128,29 +130,23 @@ namespace RainbowTower.GameplayField
                 exitPortalAnchor.position
             });
 
-            CreateOrUpdateSprite("OuterGrass", fieldVisualRoot, Vector3.zero, outerSize, layoutConfig.OuterGrassColor, BackgroundOrder);
-            CreateOrUpdateSprite("InnerGrass", fieldVisualRoot, Vector3.zero, innerSize, layoutConfig.InnerGrassColor, BackgroundOrder + 1);
-            CreateOrUpdateSprite("PathLeft", fieldVisualRoot, new Vector3(leftLaneX, 0f, 0f), new Vector2(roadThicknessWorld, outerSize.y - 2f * layoutConfig.RoadInsetPixels * pixelsToWorldY), layoutConfig.PathColor, PathOrder);
-            CreateOrUpdateSprite("PathRight", fieldVisualRoot, new Vector3(rightLaneX, 0f, 0f), new Vector2(roadThicknessWorld, outerSize.y - 2f * layoutConfig.RoadInsetPixels * pixelsToWorldY), layoutConfig.PathColor, PathOrder);
-            CreateOrUpdateSprite("PathBottom", fieldVisualRoot, new Vector3(0f, bottomLaneY, 0f), new Vector2(outerSize.x - 2f * roadInsetWorld, layoutConfig.RoadThicknessPixels * pixelsToWorldY), layoutConfig.PathColor, PathOrder);
-
-            var topLeftWidth = Mathf.Max(0.05f, (entranceLocal.x - portalSize.x * 0.5f) - (-outerSize.x * 0.5f + roadInsetWorld));
             CreateOrUpdateSprite(
-                "PathTopLeft",
+                "FieldBackground",
                 fieldVisualRoot,
-                new Vector3(-outerSize.x * 0.5f + roadInsetWorld + topLeftWidth * 0.5f, topLaneY, 0f),
-                new Vector2(topLeftWidth, layoutConfig.RoadThicknessPixels * pixelsToWorldY),
-                layoutConfig.PathColor,
-                PathOrder);
+                Vector3.zero,
+                outerSize,
+                Color.white,
+                BackgroundOrder,
+                layoutConfig.FieldBackgroundSprite != null ? layoutConfig.FieldBackgroundSprite : SpriteFactory.WhiteSprite);
+            ForceBackgroundScale();
+            RemoveSpriteIfExists("OuterGrass", fieldVisualRoot);
+            RemoveSpriteIfExists("InnerGrass", fieldVisualRoot);
 
-            var topRightWidth = Mathf.Max(0.05f, (outerSize.x * 0.5f - roadInsetWorld) - (exitLocal.x + portalSize.x * 0.5f));
-            CreateOrUpdateSprite(
-                "PathTopRight",
-                fieldVisualRoot,
-                new Vector3(exitLocal.x + portalSize.x * 0.5f + topRightWidth * 0.5f, topLaneY, 0f),
-                new Vector2(topRightWidth, layoutConfig.RoadThicknessPixels * pixelsToWorldY),
-                layoutConfig.PathColor,
-                PathOrder);
+            RemoveSpriteIfExists("PathLeft", fieldVisualRoot);
+            RemoveSpriteIfExists("PathRight", fieldVisualRoot);
+            RemoveSpriteIfExists("PathBottom", fieldVisualRoot);
+            RemoveSpriteIfExists("PathTopLeft", fieldVisualRoot);
+            RemoveSpriteIfExists("PathTopRight", fieldVisualRoot);
 
             CreatePortal("EntrancePortalGlow", "EntrancePortal", entranceLocal, portalSize, layoutConfig, pixelsToWorldX, pixelsToWorldY);
             CreatePortal("ExitPortalGlow", "ExitPortal", exitLocal, portalSize, layoutConfig, pixelsToWorldX, pixelsToWorldY);
@@ -197,13 +193,31 @@ namespace RainbowTower.GameplayField
             CreateOrUpdateSprite(portalName, fieldVisualRoot, localPosition, portalSize, layoutConfig.PortalColor, PortalOrder);
         }
 
+        private void ForceBackgroundScale()
+        {
+            var background = fieldVisualRoot != null ? fieldVisualRoot.Find("FieldBackground") : null;
+            if (background != null)
+            {
+                background.localScale = new Vector3(FieldBackgroundScale, FieldBackgroundScale, 1f);
+            }
+        }
+        private static void RemoveSpriteIfExists(string childName, Transform parent)
+        {
+            var child = parent.Find(childName);
+            if (child != null)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
         private void CreateOrUpdateSprite(
             string childName,
             Transform parent,
             Vector3 localPosition,
             Vector2 size,
             Color color,
-            int sortingOrder)
+            int sortingOrder,
+            Sprite sprite = null)
         {
             var child = parent.Find(childName);
             if (child == null)
@@ -216,7 +230,7 @@ namespace RainbowTower.GameplayField
             child.localRotation = Quaternion.identity;
 
             var renderer = child.GetComponent<SpriteRenderer>();
-            renderer.sprite = SpriteFactory.WhiteSprite;
+            renderer.sprite = sprite != null ? sprite : SpriteFactory.WhiteSprite;
             renderer.color = color;
             renderer.sortingOrder = sortingOrder;
 
@@ -250,3 +264,4 @@ namespace RainbowTower.GameplayField
         }
     }
 }
+
