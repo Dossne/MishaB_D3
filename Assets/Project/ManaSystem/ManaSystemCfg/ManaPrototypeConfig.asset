@@ -15,4 +15,6 @@ MonoBehaviour:
   startRedMana: 0
   startGreenMana: 0
   startBlueMana: 0
-
+  startYellowMana: 0
+  startMagentaMana: 0
+  startCyanMana: 0

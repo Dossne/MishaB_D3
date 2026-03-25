@@ -11,19 +11,22 @@ namespace RainbowTower.CrystalSystem
 {
     public sealed class CrystalRuntimeManager : IRuntimeManager
     {
-        private static readonly ManaColor[] BaseRotation =
+        private static readonly ManaColor[] AttackRotation =
         {
             ManaColor.Red,
             ManaColor.Green,
-            ManaColor.Blue
+            ManaColor.Blue,
+            ManaColor.Yellow,
+            ManaColor.Magenta,
+            ManaColor.Cyan
         };
 
         private static readonly CrystalPrototypeConfig.CrystalLevelData FallbackLevelData = new CrystalPrototypeConfig.CrystalLevelData();
 
         private readonly ProgressionRuntimeManager progressionRuntimeManager;
-        private readonly bool[] unlockedByColor = new bool[ManaColorUtility.BaseColorCount];
-        private readonly int[] levelsByColor = new int[ManaColorUtility.BaseColorCount];
-        private readonly CrystalUiEntry[] uiEntriesByColor = new CrystalUiEntry[ManaColorUtility.BaseColorCount];
+        private readonly bool[] unlockedByColor = new bool[ManaColorUtility.Stage6ColorCount];
+        private readonly int[] levelsByColor = new int[ManaColorUtility.Stage6ColorCount];
+        private readonly CrystalUiEntry[] uiEntriesByColor = new CrystalUiEntry[ManaColorUtility.Stage6ColorCount];
 
         private CrystalPrototypeConfig crystalConfig;
         private MainUiProvider mainUiProvider;
@@ -47,9 +50,9 @@ namespace RainbowTower.CrystalSystem
         public int GetUnlockedBaseCrystalCount()
         {
             var unlockedCount = 0;
-            for (var index = 0; index < unlockedByColor.Length; index++)
+            for (var index = 0; index < ManaColorUtility.BaseColors.Length; index++)
             {
-                if (unlockedByColor[index])
+                if (IsUnlocked(ManaColorUtility.BaseColors[index]))
                 {
                     unlockedCount++;
                 }
@@ -57,6 +60,7 @@ namespace RainbowTower.CrystalSystem
 
             return Mathf.Max(1, unlockedCount);
         }
+
         public int GetCurrentLevel(ManaColor color)
         {
             return IsUnlocked(color) ? levelsByColor[color.ToIndex()] : 1;
@@ -72,9 +76,50 @@ namespace RainbowTower.CrystalSystem
             return IsUnlocked(color) ? ResolveLevelData(color).ManaCap : 0;
         }
 
+        public bool TryGetGenerationInputs(ManaColor color, out ManaColor[] generationInputs)
+        {
+            generationInputs = null;
+            if (crystalConfig == null || !crystalConfig.TryGetDefinition(color, out var definition) || definition == null)
+            {
+                return false;
+            }
+
+            var inputColors = definition.GenerationInputColors;
+            if (inputColors == null || inputColors.Length == 0)
+            {
+                return false;
+            }
+
+            generationInputs = inputColors;
+            return true;
+        }
+
         public int GetShotDamage(ManaColor color)
         {
-            return IsUnlocked(color) ? ResolveLevelData(color).Damage : 0;
+            if (!IsUnlocked(color))
+            {
+                return 0;
+            }
+
+            var ownDamage = ResolveCurrentLevelDamage(color);
+            if (!crystalConfig.TryGetDefinition(color, out var definition) || definition == null)
+            {
+                return ownDamage;
+            }
+
+            var parentColors = definition.GenerationInputColors;
+            if (parentColors == null || parentColors.Length == 0)
+            {
+                return ownDamage;
+            }
+
+            var damage = ownDamage;
+            for (var index = 0; index < parentColors.Length; index++)
+            {
+                damage += ResolveCurrentLevelDamage(parentColors[index]);
+            }
+
+            return damage;
         }
 
         public bool TryGetNextAttackColor(ManaRuntimeManager manaRuntimeManager, out ManaColor manaColor)
@@ -85,16 +130,16 @@ namespace RainbowTower.CrystalSystem
                 return false;
             }
 
-            for (var offset = 0; offset < BaseRotation.Length; offset++)
+            for (var offset = 0; offset < AttackRotation.Length; offset++)
             {
-                var rotationIndex = (nextRotationIndex + offset) % BaseRotation.Length;
-                var candidateColor = BaseRotation[rotationIndex];
+                var rotationIndex = (nextRotationIndex + offset) % AttackRotation.Length;
+                var candidateColor = AttackRotation[rotationIndex];
                 if (!IsUnlocked(candidateColor) || manaRuntimeManager.GetCurrentMana(candidateColor) <= 0)
                 {
                     continue;
                 }
 
-                nextRotationIndex = (rotationIndex + 1) % BaseRotation.Length;
+                nextRotationIndex = (rotationIndex + 1) % AttackRotation.Length;
                 manaColor = candidateColor;
                 return true;
             }
@@ -114,10 +159,10 @@ namespace RainbowTower.CrystalSystem
                 return;
             }
 
-            for (var index = 0; index < ManaColorUtility.BaseColorCount; index++)
+            for (var index = 0; index < ManaColorUtility.Stage6Colors.Length; index++)
             {
-                var color = (ManaColor)index;
-                if (!crystalConfig.TryGetBaseDefinition(color, out var definition) || definition == null)
+                var color = ManaColorUtility.Stage6Colors[index];
+                if (!crystalConfig.TryGetDefinition(color, out var definition) || definition == null)
                 {
                     unlockedByColor[index] = true;
                     levelsByColor[index] = 1;
@@ -126,9 +171,7 @@ namespace RainbowTower.CrystalSystem
 
                 var maxLevel = Mathf.Max(1, definition.Levels == null ? 0 : definition.Levels.Length);
                 unlockedByColor[index] = definition.StartUnlocked;
-                levelsByColor[index] = definition.StartUnlocked
-                    ? Mathf.Clamp(definition.StartLevel, 1, maxLevel)
-                    : Mathf.Clamp(definition.StartLevel, 1, maxLevel);
+                levelsByColor[index] = Mathf.Clamp(definition.StartLevel, 1, maxLevel);
             }
 
             nextRotationIndex = 0;
@@ -183,19 +226,9 @@ namespace RainbowTower.CrystalSystem
             IsReady = false;
         }
 
-        private void OnRedAction()
+        private void OnColorAction(ManaColor color)
         {
-            TryPerformPrimaryAction(ManaColor.Red);
-        }
-
-        private void OnGreenAction()
-        {
-            TryPerformPrimaryAction(ManaColor.Green);
-        }
-
-        private void OnBlueAction()
-        {
-            TryPerformPrimaryAction(ManaColor.Blue);
+            TryPerformPrimaryAction(color);
         }
 
         private void TryPerformPrimaryAction(ManaColor color)
@@ -220,7 +253,7 @@ namespace RainbowTower.CrystalSystem
         private bool TryUnlock(ManaColor color)
         {
             if (IsUnlocked(color) ||
-                !crystalConfig.TryGetBaseDefinition(color, out var definition) ||
+                !crystalConfig.TryGetDefinition(color, out var definition) ||
                 definition == null ||
                 !HasUnlockDependencies(definition))
             {
@@ -240,7 +273,7 @@ namespace RainbowTower.CrystalSystem
         private bool TryUpgrade(ManaColor color)
         {
             if (!IsUnlocked(color) ||
-                !crystalConfig.TryGetBaseDefinition(color, out var definition) ||
+                !crystalConfig.TryGetDefinition(color, out var definition) ||
                 definition?.Levels == null ||
                 definition.Levels.Length == 0)
             {
@@ -285,7 +318,7 @@ namespace RainbowTower.CrystalSystem
 
         private CrystalPrototypeConfig.CrystalLevelData ResolveLevelData(ManaColor color)
         {
-            if (crystalConfig == null || !crystalConfig.TryGetBaseDefinition(color, out var definition) || definition?.Levels == null || definition.Levels.Length == 0)
+            if (crystalConfig == null || !crystalConfig.TryGetDefinition(color, out var definition) || definition?.Levels == null || definition.Levels.Length == 0)
             {
                 return FallbackLevelData;
             }
@@ -295,6 +328,11 @@ namespace RainbowTower.CrystalSystem
             return levelData ?? FallbackLevelData;
         }
 
+        private int ResolveCurrentLevelDamage(ManaColor color)
+        {
+            return ResolveLevelData(color).Damage;
+        }
+
         private void RefreshActionUi()
         {
             if (xpLabel != null)
@@ -302,9 +340,11 @@ namespace RainbowTower.CrystalSystem
                 xpLabel.text = $"XP {Mathf.Max(0, progressionRuntimeManager.CurrentXp)}";
             }
 
-            UpdateActionUiForColor(ManaColor.Red);
-            UpdateActionUiForColor(ManaColor.Green);
-            UpdateActionUiForColor(ManaColor.Blue);
+            for (var index = 0; index < ManaColorUtility.Stage6Colors.Length; index++)
+            {
+                UpdateActionUiForColor(ManaColorUtility.Stage6Colors[index]);
+            }
+
             lastPresentedXp = progressionRuntimeManager.CurrentXp;
         }
 
@@ -316,7 +356,7 @@ namespace RainbowTower.CrystalSystem
                 return;
             }
 
-            if (!crystalConfig.TryGetBaseDefinition(color, out var definition) || definition == null)
+            if (!crystalConfig.TryGetDefinition(color, out var definition) || definition == null)
             {
                 SetUiEntryState(uiEntry, "Locked", "N/A", false);
                 return;
@@ -411,9 +451,13 @@ namespace RainbowTower.CrystalSystem
             uiFont = ResolveUiFont(shelfPanel);
             xpLabel = EnsureXpLabel(shelfPanel);
 
-            BindCrystalSlot(ManaColor.Red, "Red", OnRedAction);
-            BindCrystalSlot(ManaColor.Green, "Green", OnGreenAction);
-            BindCrystalSlot(ManaColor.Blue, "Blue", OnBlueAction);
+            BindCrystalSlot(ManaColor.Red, "TopRow", "Red");
+            BindCrystalSlot(ManaColor.Green, "TopRow", "Green");
+            BindCrystalSlot(ManaColor.Blue, "TopRow", "Blue");
+
+            BindCrystalSlot(ManaColor.Yellow, "MiddleRow", "Yellow");
+            BindCrystalSlot(ManaColor.Magenta, "MiddleRow", "Magenta");
+            BindCrystalSlot(ManaColor.Cyan, "MiddleRow", "Cyan");
         }
 
         private TMP_FontAsset ResolveUiFont(RectTransform shelfPanel)
@@ -451,7 +495,7 @@ namespace RainbowTower.CrystalSystem
             return text;
         }
 
-        private void BindCrystalSlot(ManaColor color, string colorName, UnityEngine.Events.UnityAction onClick)
+        private void BindCrystalSlot(ManaColor color, string rowName, string colorName)
         {
             var shelfPanel = mainUiProvider.HudParent.Find("CrystalShelfPanel") as RectTransform;
             if (shelfPanel == null)
@@ -459,7 +503,7 @@ namespace RainbowTower.CrystalSystem
                 return;
             }
 
-            var slot = shelfPanel.Find($"ShelfRows/TopRow/{colorName}Slot") as RectTransform;
+            var slot = shelfPanel.Find($"ShelfRows/{rowName}/{colorName}Slot") as RectTransform;
             if (slot == null)
             {
                 return;
@@ -471,7 +515,7 @@ namespace RainbowTower.CrystalSystem
             var actionLabel = EnsureActionButtonLabel(actionButton.transform as RectTransform);
 
             actionButton.onClick.RemoveAllListeners();
-            actionButton.onClick.AddListener(onClick);
+            actionButton.onClick.AddListener(() => OnColorAction(color));
 
             uiEntriesByColor[color.ToIndex()] = new CrystalUiEntry
             {
@@ -638,4 +682,3 @@ namespace RainbowTower.CrystalSystem
         }
     }
 }
-

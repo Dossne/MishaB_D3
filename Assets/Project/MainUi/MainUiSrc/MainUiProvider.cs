@@ -38,6 +38,9 @@ namespace RainbowTower.MainUi
         [SerializeField] private TMP_Text redCrystalLabel;
         [SerializeField] private TMP_Text greenCrystalLabel;
         [SerializeField] private TMP_Text blueCrystalLabel;
+        [SerializeField] private TMP_Text yellowCrystalLabel;
+        [SerializeField] private TMP_Text magentaCrystalLabel;
+        [SerializeField] private TMP_Text cyanCrystalLabel;
 
         [Header("Defeat Popup")]
         [SerializeField] private RectTransform defeatPopupRoot;
@@ -78,6 +81,24 @@ namespace RainbowTower.MainUi
             if (blueCrystalLabel != null)
             {
                 blueCrystalLabel.text = FormatBaseCrystalLabel("Blue", blueMana, blueLevel);
+            }
+        }
+
+        public void SetMixedCrystalPanelValues(int yellowMana, int yellowLevel, int magentaMana, int magentaLevel, int cyanMana, int cyanLevel)
+        {
+            if (yellowCrystalLabel != null)
+            {
+                yellowCrystalLabel.text = FormatBaseCrystalLabel("Yellow", yellowMana, yellowLevel);
+            }
+
+            if (magentaCrystalLabel != null)
+            {
+                magentaCrystalLabel.text = FormatBaseCrystalLabel("Magenta", magentaMana, magentaLevel);
+            }
+
+            if (cyanCrystalLabel != null)
+            {
+                cyanCrystalLabel.text = FormatBaseCrystalLabel("Cyan", cyanMana, cyanLevel);
             }
         }
 
@@ -155,6 +176,7 @@ namespace RainbowTower.MainUi
             BuildCrystalShelf();
             AssignCrystalShelfReferences();
             SetBaseCrystalPanelValues(0, 1, 0, 1, 0, 1);
+            SetMixedCrystalPanelValues(0, 1, 0, 1, 0, 1);
         }
 
         private void EnsureEventSystem()
@@ -341,6 +363,9 @@ namespace RainbowTower.MainUi
             redCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/TopRow/RedSlot/Label");
             greenCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/TopRow/GreenSlot/Label");
             blueCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/TopRow/BlueSlot/Label");
+            yellowCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/MiddleRow/YellowSlot/Label");
+            magentaCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/MiddleRow/MagentaSlot/Label");
+            cyanCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/MiddleRow/CyanSlot/Label");
         }
 
         private RectTransform CreatePanel(
@@ -554,5 +579,3 @@ namespace RainbowTower.MainUi
         }
     }
 }
-
-

@@ -17,6 +17,7 @@ MonoBehaviour:
     startUnlocked: 1
     unlockCost: 0
     requiredUnlockedColors: []
+    generationInputColors: []
     startLevel: 1
     levels:
     - generationPerSecond: 1
@@ -36,6 +37,7 @@ MonoBehaviour:
     unlockCost: 5
     requiredUnlockedColors:
     - 0
+    generationInputColors: []
     startLevel: 1
     levels:
     - generationPerSecond: 1
@@ -55,6 +57,7 @@ MonoBehaviour:
     unlockCost: 12
     requiredUnlockedColors:
     - 1
+    generationInputColors: []
     startLevel: 1
     levels:
     - generationPerSecond: 1
@@ -69,4 +72,72 @@ MonoBehaviour:
       manaCap: 20
       damage: 5
       upgradeCost: 0
-
+  - color: 3
+    startUnlocked: 0
+    unlockCost: 20
+    requiredUnlockedColors:
+    - 0
+    - 1
+    generationInputColors:
+    - 0
+    - 1
+    startLevel: 1
+    levels:
+    - generationPerSecond: 0.7
+      manaCap: 8
+      damage: 1
+      upgradeCost: 12
+    - generationPerSecond: 1
+      manaCap: 12
+      damage: 2
+      upgradeCost: 18
+    - generationPerSecond: 1.35
+      manaCap: 16
+      damage: 3
+      upgradeCost: 0
+  - color: 4
+    startUnlocked: 0
+    unlockCost: 26
+    requiredUnlockedColors:
+    - 0
+    - 2
+    generationInputColors:
+    - 0
+    - 2
+    startLevel: 1
+    levels:
+    - generationPerSecond: 0.65
+      manaCap: 8
+      damage: 1
+      upgradeCost: 14
+    - generationPerSecond: 0.95
+      manaCap: 12
+      damage: 2
+      upgradeCost: 20
+    - generationPerSecond: 1.3
+      manaCap: 16
+      damage: 3
+      upgradeCost: 0
+  - color: 5
+    startUnlocked: 0
+    unlockCost: 30
+    requiredUnlockedColors:
+    - 1
+    - 2
+    generationInputColors:
+    - 1
+    - 2
+    startLevel: 1
+    levels:
+    - generationPerSecond: 0.65
+      manaCap: 8
+      damage: 1
+      upgradeCost: 14
+    - generationPerSecond: 0.95
+      manaCap: 12
+      damage: 2
+      upgradeCost: 20
+    - generationPerSecond: 1.25
+      manaCap: 16
+      damage: 3
+      upgradeCost: 0

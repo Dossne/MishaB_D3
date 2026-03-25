@@ -13,12 +13,15 @@ namespace RainbowTower.CrystalSystem
         {
             new BaseCrystalDefinition(ManaColor.Red),
             new BaseCrystalDefinition(ManaColor.Green),
-            new BaseCrystalDefinition(ManaColor.Blue)
+            new BaseCrystalDefinition(ManaColor.Blue),
+            new BaseCrystalDefinition(ManaColor.Yellow),
+            new BaseCrystalDefinition(ManaColor.Magenta),
+            new BaseCrystalDefinition(ManaColor.Cyan)
         };
 
         public BaseCrystalDefinition[] BaseCrystalDefinitions => baseCrystalDefinitions;
 
-        public bool TryGetBaseDefinition(ManaColor color, out BaseCrystalDefinition definition)
+        public bool TryGetDefinition(ManaColor color, out BaseCrystalDefinition definition)
         {
             for (var index = 0; index < baseCrystalDefinitions.Length; index++)
             {
@@ -34,6 +37,11 @@ namespace RainbowTower.CrystalSystem
             return false;
         }
 
+        public bool TryGetBaseDefinition(ManaColor color, out BaseCrystalDefinition definition)
+        {
+            return TryGetDefinition(color, out definition);
+        }
+
         [Serializable]
         public sealed class BaseCrystalDefinition
         {
@@ -41,6 +49,7 @@ namespace RainbowTower.CrystalSystem
             [SerializeField] private bool startUnlocked = true;
             [SerializeField, Min(0)] private int unlockCost = 5;
             [SerializeField] private ManaColor[] requiredUnlockedColors = Array.Empty<ManaColor>();
+            [SerializeField] private ManaColor[] generationInputColors = Array.Empty<ManaColor>();
             [SerializeField, Min(1)] private int startLevel = 1;
             [SerializeField] private CrystalLevelData[] levels =
             {
@@ -56,6 +65,7 @@ namespace RainbowTower.CrystalSystem
             public bool StartUnlocked => startUnlocked;
             public int UnlockCost => Mathf.Max(0, unlockCost);
             public ManaColor[] RequiredUnlockedColors => requiredUnlockedColors;
+            public ManaColor[] GenerationInputColors => generationInputColors;
             public int StartLevel => Mathf.Max(1, startLevel);
             public CrystalLevelData[] Levels => levels;
         }
