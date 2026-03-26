@@ -386,10 +386,10 @@ namespace RainbowTower.MainUi
 
         private void BuildHud()
         {
-            if (hudParent.Find("TopHudPanel") != null)
+            var existingTopHudPanel = hudParent.Find("TopHudPanel") as RectTransform;
+            if (existingTopHudPanel != null)
             {
-                AssignTopHudReferences();
-                return;
+                Destroy(existingTopHudPanel.gameObject);
             }
 
             var topHudPanel = CreatePanel(
@@ -407,16 +407,22 @@ namespace RainbowTower.MainUi
             layoutGroup.childAlignment = TextAnchor.MiddleCenter;
             layoutGroup.childControlWidth = true;
             layoutGroup.childControlHeight = true;
-            layoutGroup.childForceExpandWidth = false;
+            layoutGroup.childForceExpandWidth = true;
             layoutGroup.childForceExpandHeight = true;
 
             var wavePanel = CreateLayoutPanel("WavePanel", topHudPanel, new Color(0.95f, 0.68f, 0.12f, 0.95f), 1f, 0f);
             waveLabel = CreateStretchText("WaveLabel", wavePanel, "Wave 1/10", 52f);
             waveLabel.color = new Color(0.98f, 0.97f, 0.88f, 1f);
 
-            var hpPanel = CreateLayoutPanel("HpPanel", topHudPanel, new Color(0.63f, 0.32f, 0.08f, 0.95f), 0f, 280f);
+            var xpPanel = CreateLayoutPanel("XpPanel", topHudPanel, new Color(0.74f, 0.41f, 0.11f, 0.95f), 1f, 0f);
+            var xpTopLabel = CreateStretchText("XpLabel", xpPanel, "XP 0", 46f);
+            xpTopLabel.color = new Color(1f, 0.95f, 0.84f, 1f);
+
+            var hpPanel = CreateLayoutPanel("HpPanel", topHudPanel, new Color(0.63f, 0.32f, 0.08f, 0.95f), 1f, 0f);
             hpLabel = CreateStretchText("HpLabel", hpPanel, "HP 25/30", 46f);
             hpLabel.color = new Color(1f, 0.95f, 0.84f, 1f);
+
+            AssignTopHudReferences();
         }
 
         private void BuildCrystalShelf()

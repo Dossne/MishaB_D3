@@ -550,9 +550,10 @@ if (!IsUnlocked(color))
                 Object.Destroy(oldShelfLabel.gameObject);
             }
 
+            var xpPanel = hudParent != null ? hudParent.Find("TopHudPanel/XpPanel") as RectTransform : null;
             var hpPanel = hudParent != null ? hudParent.Find("TopHudPanel/HpPanel") as RectTransform : null;
             var topPanel = hudParent != null ? hudParent.Find("TopHudPanel") as RectTransform : null;
-            var parent = hpPanel != null ? hpPanel : topPanel;
+            var parent = xpPanel != null ? xpPanel : (hpPanel != null ? hpPanel : topPanel);
             if (parent == null)
             {
                 return null;
@@ -575,7 +576,7 @@ if (!IsUnlocked(color))
 
             var text = xpObject.GetComponent<TextMeshProUGUI>();
             ConfigureText(text, "XP 0", 34f, FontStyles.Bold);
-            text.alignment = TextAlignmentOptions.MidlineRight;
+            text.alignment = TextAlignmentOptions.Center;
             text.color = new Color(1f, 0.89f, 0.5f, 1f);
             return text;
         }
@@ -1163,5 +1164,4 @@ if (!IsUnlocked(color))
         }
     }
 }
-
 

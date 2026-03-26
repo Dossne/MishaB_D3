@@ -12,6 +12,7 @@ namespace RainbowTower.GameplayField
         private const int PortalOrder = -9;
         private const int TowerOrder = -7;
         private const float FieldBackgroundScale = 0.55f;
+        private static readonly Vector3 PortalVisualScale = new(0.3f, 0.26f, 1f);
 
         [Header("Scene Anchors")]
         [SerializeField] private Transform fieldVisualRoot;
@@ -188,6 +189,12 @@ namespace RainbowTower.GameplayField
             }
 
             CreateOrUpdateSprite(portalName, fieldVisualRoot, localPosition, portalSize, Color.white, PortalOrder, layoutConfig.PortalSprite);
+
+            var portalTransform = fieldVisualRoot.Find(portalName);
+            if (portalTransform != null)
+            {
+                portalTransform.localScale = PortalVisualScale;
+            }
         }
 
         private void ForceBackgroundScale()
@@ -261,6 +268,4 @@ namespace RainbowTower.GameplayField
         }
     }
 }
-
-
 
