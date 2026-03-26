@@ -147,8 +147,8 @@ namespace RainbowTower.GameplayField
             RemoveSpriteIfExists("PathTopLeft", fieldVisualRoot);
             RemoveSpriteIfExists("PathTopRight", fieldVisualRoot);
 
-            CreatePortal("EntrancePortalGlow", "EntrancePortal", entranceLocal, portalSize, layoutConfig, pixelsToWorldX, pixelsToWorldY);
-            CreatePortal("ExitPortalGlow", "ExitPortal", exitLocal, portalSize, layoutConfig, pixelsToWorldX, pixelsToWorldY);
+            CreatePortal("EntrancePortalGlow", "EntrancePortal", entranceLocal, portalSize, layoutConfig);
+            CreatePortal("ExitPortalGlow", "ExitPortal", exitLocal, portalSize, layoutConfig);
 
             var towerBaseSize = new Vector2(layoutConfig.TowerBaseSizePixels.x * pixelsToWorldX, layoutConfig.TowerBaseSizePixels.y * pixelsToWorldY);
 
@@ -176,18 +176,18 @@ namespace RainbowTower.GameplayField
             string portalName,
             Vector3 localPosition,
             Vector2 portalSize,
-            GameplayFieldLayoutConfig layoutConfig,
-            float pixelsToWorldX,
-            float pixelsToWorldY)
+            GameplayFieldLayoutConfig layoutConfig)
         {
-            CreateOrUpdateSprite(
-                glowName,
-                fieldVisualRoot,
-                localPosition,
-                new Vector2(portalSize.x * 1.35f, portalSize.y * 1.15f),
-                layoutConfig.PortalGlowColor,
-                PortalGlowOrder);
-            CreateOrUpdateSprite(portalName, fieldVisualRoot, localPosition, portalSize, layoutConfig.PortalColor, PortalOrder);
+            RemoveSpriteIfExists(glowName, fieldVisualRoot);
+
+            if (layoutConfig.PortalSprite == null)
+            {
+                Debug.LogError($"Portal sprite is missing in {nameof(GameplayFieldLayoutConfig)}.", this);
+                RemoveSpriteIfExists(portalName, fieldVisualRoot);
+                return;
+            }
+
+            CreateOrUpdateSprite(portalName, fieldVisualRoot, localPosition, portalSize, Color.white, PortalOrder, layoutConfig.PortalSprite);
         }
 
         private void ForceBackgroundScale()
@@ -261,8 +261,6 @@ namespace RainbowTower.GameplayField
         }
     }
 }
-
-
 
 
 

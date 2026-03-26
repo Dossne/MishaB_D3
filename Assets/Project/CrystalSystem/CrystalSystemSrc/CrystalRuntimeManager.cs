@@ -28,9 +28,11 @@ namespace RainbowTower.CrystalSystem
         private readonly bool[] unlockedByColor = new bool[ManaColorUtility.TotalColorCount];
         private readonly int[] levelsByColor = new int[ManaColorUtility.TotalColorCount];
         private readonly CrystalUiEntry[] uiEntriesByColor = new CrystalUiEntry[ManaColorUtility.TotalColorCount];
+        private readonly int[] lastPresentedManaByColor = new int[ManaColorUtility.TotalColorCount];
 
         private CrystalPrototypeConfig crystalConfig;
         private MainUiProvider mainUiProvider;
+        private ManaRuntimeManager manaRuntimeManager;
         private TMP_FontAsset uiFont;
         private TMP_Text xpLabel;
         private int nextRotationIndex;
@@ -46,6 +48,11 @@ namespace RainbowTower.CrystalSystem
         }
 
         public bool IsReady { get; private set; }
+
+        public void SetManaRuntimeManager(ManaRuntimeManager manager)
+        {
+            manaRuntimeManager = manager;
+        }
 
         public bool IsUnlocked(ManaColor color)
         {
@@ -223,7 +230,7 @@ namespace RainbowTower.CrystalSystem
                 BindCheatUi();
                 RefreshActionUi();
             }
-            else if (progressionRuntimeManager.CurrentXp != lastPresentedXp)
+            else if (progressionRuntimeManager.CurrentXp != lastPresentedXp || HasAnyManaValueChanged())
             {
                 RefreshActionUi();
             }
@@ -245,6 +252,7 @@ namespace RainbowTower.CrystalSystem
                 unlockedByColor[index] = false;
                 levelsByColor[index] = 0;
                 uiEntriesByColor[index] = null;
+                lastPresentedManaByColor[index] = 0;
             }
 
             CloseActivePopup();
@@ -256,6 +264,7 @@ namespace RainbowTower.CrystalSystem
 
             crystalConfig = null;
             mainUiProvider = null;
+            manaRuntimeManager = null;
             uiFont = null;
             xpLabel = null;
             nextRotationIndex = 0;
@@ -381,6 +390,26 @@ namespace RainbowTower.CrystalSystem
             return ResolveLevelData(color).Damage;
         }
 
+        private bool HasAnyManaValueChanged()
+        {
+            if (manaRuntimeManager == null)
+            {
+                return false;
+            }
+
+            for (var index = 0; index < ManaColorUtility.AllColors.Length; index++)
+            {
+                var color = ManaColorUtility.AllColors[index];
+                var currentMana = Mathf.Max(0, manaRuntimeManager.GetCurrentMana(color));
+                if (currentMana != lastPresentedManaByColor[color.ToIndex()])
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void RefreshActionUi()
         {
             if (xpLabel != null)
@@ -390,7 +419,9 @@ namespace RainbowTower.CrystalSystem
 
             for (var index = 0; index < ManaColorUtility.AllColors.Length; index++)
             {
-                UpdateActionUiForColor(ManaColorUtility.AllColors[index]);
+                var color = ManaColorUtility.AllColors[index];
+                UpdateActionUiForColor(color);
+                lastPresentedManaByColor[color.ToIndex()] = manaRuntimeManager != null ? Mathf.Max(0, manaRuntimeManager.GetCurrentMana(color)) : 0;
             }
 
             lastPresentedXp = progressionRuntimeManager.CurrentXp;
@@ -410,12 +441,12 @@ namespace RainbowTower.CrystalSystem
                 return;
             }
 
-            if (uiEntry.LevelLabel != null)
+            if (uiEntry.MainLabel != null)
             {
-                uiEntry.LevelLabel.text = $"LV {Mathf.Max(1, GetCurrentLevel(color))}";
+                var currentMana = manaRuntimeManager != null ? manaRuntimeManager.GetCurrentMana(color) : 0;
+                uiEntry.MainLabel.text = $"{Mathf.Max(0, currentMana)}";
             }
-
-            if (!IsUnlocked(color))
+if (!IsUnlocked(color))
             {
                 var canUnlock = HasUnlockDependencies(definition) && CanAffordOrFree(definition.UnlockCost);
                 SetSlotInteractableState(uiEntry, canUnlock, canUnlock ? mainUiProvider?.LockIndicatorSprite : null);
@@ -433,13 +464,6 @@ namespace RainbowTower.CrystalSystem
             if (uiEntry.SlotButton != null)
             {
                 uiEntry.SlotButton.interactable = interactable;
-            }
-
-            if (uiEntry.SlotButtonGraphic != null)
-            {
-                uiEntry.SlotButtonGraphic.color = interactable
-                    ? new Color(1f, 1f, 1f, 0.02f)
-                    : new Color(0f, 0f, 0f, 0.18f);
             }
 
             if (uiEntry.IndicatorImage != null)
@@ -477,7 +501,7 @@ namespace RainbowTower.CrystalSystem
             }
 
             uiFont = ResolveUiFont(shelfPanel);
-            xpLabel = EnsureXpLabel(shelfPanel);
+            xpLabel = EnsureXpLabel(mainUiProvider.HudParent, shelfPanel);
 
             BindCrystalSlot(ManaColor.Red, "TopRow", "Red");
             BindCrystalSlot(ManaColor.Green, "TopRow", "Green");
@@ -518,9 +542,23 @@ namespace RainbowTower.CrystalSystem
             return TMP_Settings.defaultFontAsset;
         }
 
-        private TMP_Text EnsureXpLabel(RectTransform shelfPanel)
+        private TMP_Text EnsureXpLabel(RectTransform hudParent, RectTransform shelfPanel)
         {
-            var existingLabel = shelfPanel.Find("XpLabel");
+            var oldShelfLabel = shelfPanel != null ? shelfPanel.Find("XpLabel") : null;
+            if (oldShelfLabel != null)
+            {
+                Object.Destroy(oldShelfLabel.gameObject);
+            }
+
+            var hpPanel = hudParent != null ? hudParent.Find("TopHudPanel/HpPanel") as RectTransform : null;
+            var topPanel = hudParent != null ? hudParent.Find("TopHudPanel") as RectTransform : null;
+            var parent = hpPanel != null ? hpPanel : topPanel;
+            if (parent == null)
+            {
+                return null;
+            }
+
+            var existingLabel = parent.Find("XpLabel");
             if (existingLabel != null && existingLabel.TryGetComponent<TextMeshProUGUI>(out var existingText))
             {
                 return existingText;
@@ -528,11 +566,11 @@ namespace RainbowTower.CrystalSystem
 
             var xpObject = new GameObject("XpLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
             var xpTransform = (RectTransform)xpObject.transform;
-            xpTransform.SetParent(shelfPanel, false);
-            xpTransform.anchorMin = new Vector2(1f, 1f);
+            xpTransform.SetParent(parent, false);
+            xpTransform.anchorMin = new Vector2(0f, 0f);
             xpTransform.anchorMax = new Vector2(1f, 1f);
-            xpTransform.offsetMin = new Vector2(-300f, -92f);
-            xpTransform.offsetMax = new Vector2(-20f, -20f);
+            xpTransform.offsetMin = new Vector2(12f, 8f);
+            xpTransform.offsetMax = new Vector2(-12f, -8f);
             xpTransform.localScale = Vector3.one;
 
             var text = xpObject.GetComponent<TextMeshProUGUI>();
@@ -558,11 +596,16 @@ namespace RainbowTower.CrystalSystem
 
             var iconImage = EnsureSlotIcon(slot, color);
             var mainLabel = EnsureManaLabel(slot);
-            var levelLabel = EnsureLevelLabel(slot, color);
+            DisableLevelLabel(slot);
+            TMP_Text levelLabel = null;
             DisableStatusLabel(slot);
             HideOldActionButton(slot);
-            var slotButton = EnsureSlotButton(slot, out var slotButtonGraphic);
-            var stateIndicator = EnsureStateIndicator(slot);
+            var slotButton = EnsureSlotButton(slot, iconImage, out var slotButtonGraphic);
+            if (slotButton == null)
+            {
+                return;
+            }
+            var stateIndicator = EnsureStateIndicator(slot, iconImage);
 
             slotButton.onClick.RemoveAllListeners();
             slotButton.onClick.AddListener(() => OnSlotPressed(color));
@@ -600,21 +643,14 @@ namespace RainbowTower.CrystalSystem
                 iconImage = iconTransform.gameObject.AddComponent<Image>();
             }
 
-            if (slot.TryGetComponent<Image>(out var slotBackground))
-            {
-                slotBackground.sprite = null;
-                slotBackground.color = new Color(1f, 1f, 1f, 0.01f);
-                slotBackground.raycastTarget = true;
-            }
-
             if (crystalConfig != null && crystalConfig.TryGetDefinition(color, out var definition) && definition != null)
             {
                 iconImage.sprite = definition.IconSprite;
             }
 
-            iconImage.color = Color.white;
             iconImage.type = Image.Type.Simple;
             iconImage.preserveAspect = true;
+            iconImage.raycastTarget = true;
             return iconImage;
         }
 
@@ -641,7 +677,7 @@ namespace RainbowTower.CrystalSystem
             }
 
             ConfigureText(label, "0", 64f, FontStyles.Bold);
-            ApplyTextOutline(label, 0.15f, new Color(0f, 0f, 0f, 1f));
+            ApplyTextOutline(label, 0.42f, new Color(0f, 0f, 0f, 1f));
             label.alignment = TextAlignmentOptions.Center;
             label.textWrappingMode = TextWrappingModes.NoWrap;
             return label;
@@ -676,6 +712,15 @@ namespace RainbowTower.CrystalSystem
             return levelLabel;
         }
 
+        private static void DisableLevelLabel(RectTransform slot)
+        {
+            var levelTransform = slot.Find("LevelLabel");
+            if (levelTransform != null)
+            {
+                levelTransform.gameObject.SetActive(false);
+            }
+        }
+
         private static void DisableStatusLabel(RectTransform slot)
         {
             var statusTransform = slot.Find("StatusLabel");
@@ -694,31 +739,56 @@ namespace RainbowTower.CrystalSystem
             }
         }
 
-        private Button EnsureSlotButton(RectTransform slot, out Image slotButtonGraphic)
+        private Button EnsureSlotButton(RectTransform slot, Image iconImage, out Image slotButtonGraphic)
         {
-            if (!slot.TryGetComponent<Image>(out slotButtonGraphic))
+            slotButtonGraphic = iconImage;
+            if (slotButtonGraphic == null)
             {
-                slotButtonGraphic = slot.gameObject.AddComponent<Image>();
+                slotButtonGraphic = slot.GetComponentInChildren<Image>();
+                if (slotButtonGraphic == null)
+                {
+                    return null;
+                }
             }
 
-            slotButtonGraphic.sprite = null;
-            slotButtonGraphic.color = new Color(1f, 1f, 1f, 0.02f);
             slotButtonGraphic.raycastTarget = true;
-            slotButtonGraphic.type = Image.Type.Simple;
 
-            var button = slot.GetComponent<Button>();
+            var iconTransform = slotButtonGraphic.rectTransform;
+
+            var slotButton = slot.GetComponent<Button>();
+            if (slotButton != null)
+            {
+                Object.Destroy(slotButton);
+            }
+
+            if (slot.TryGetComponent<Image>(out var slotImage))
+            {
+                slotImage.raycastTarget = false;
+                if (slotImage.sprite == null)
+                {
+                    Object.Destroy(slotImage);
+                }
+            }
+
+            var button = iconTransform.GetComponent<Button>();
             if (button == null)
             {
-                button = slot.gameObject.AddComponent<Button>();
+                button = iconTransform.gameObject.AddComponent<Button>();
             }
 
             button.targetGraphic = slotButtonGraphic;
+            button.transition = Selectable.Transition.ColorTint;
+            button.colors = ColorBlock.defaultColorBlock;
             return button;
         }
 
-        private static Image EnsureStateIndicator(RectTransform slot)
+        private static Image EnsureStateIndicator(RectTransform slot, Image iconImage)
         {
-            var indicatorTransform = slot.Find("StateIndicator") as RectTransform;
+            var indicatorTransform = (iconImage != null ? iconImage.rectTransform.Find("StateIndicator") : null) as RectTransform;
+            if (indicatorTransform == null)
+            {
+                indicatorTransform = slot.Find("StateIndicator") as RectTransform;
+            }
             if (indicatorTransform == null)
             {
                 var indicatorObject = new GameObject("StateIndicator", typeof(RectTransform), typeof(Image));
@@ -726,11 +796,17 @@ namespace RainbowTower.CrystalSystem
                 indicatorTransform.SetParent(slot, false);
             }
 
+            var indicatorParent = iconImage != null ? iconImage.rectTransform : slot;
+            if (indicatorTransform.parent != indicatorParent)
+            {
+                indicatorTransform.SetParent(indicatorParent, false);
+            }
+
             indicatorTransform.anchorMin = new Vector2(1f, 1f);
             indicatorTransform.anchorMax = new Vector2(1f, 1f);
             indicatorTransform.pivot = new Vector2(1f, 1f);
-            indicatorTransform.anchoredPosition = new Vector2(-18f, -18f);
-            indicatorTransform.sizeDelta = new Vector2(44f, 44f);
+            indicatorTransform.anchoredPosition = new Vector2(-8f, -8f);
+            indicatorTransform.sizeDelta = new Vector2(42f, 42f);
             indicatorTransform.localScale = Vector3.one;
 
             var indicatorImage = indicatorTransform.GetComponent<Image>();
@@ -864,7 +940,7 @@ namespace RainbowTower.CrystalSystem
 
             CreatePopupIcon(panel, definition.IconSprite);
 
-            var detailsText = CreatePopupText(panel, "UpgradeDetailsLabel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-220f, -86f), new Vector2(220f, 34f), 24f);
+            var detailsText = CreatePopupText(panel, "UpgradeDetailsLabel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-220f, -86f), new Vector2(220f, 34f), 36f);
             detailsText.alignment = TextAlignmentOptions.Center;
             detailsText.textWrappingMode = TextWrappingModes.Normal;
 
@@ -879,7 +955,7 @@ namespace RainbowTower.CrystalSystem
 
             if (hasNextLevel && currentData != null && nextData != null)
             {
-                detailsText.text = BuildUpgradeDetails(currentData, nextData);
+                detailsText.text = BuildUpgradeDetails(color, currentData, nextData);
                 var upgradeCost = currentData.UpgradeCost;
                 priceText.text = $"Cost {Mathf.Max(0, upgradeCost)} XP";
                 upgradeButton.interactable = CanAffordOrFree(upgradeCost);
@@ -898,13 +974,29 @@ namespace RainbowTower.CrystalSystem
             }
         }
 
-        private static string BuildUpgradeDetails(CrystalPrototypeConfig.CrystalLevelData currentData, CrystalPrototypeConfig.CrystalLevelData nextData)
+        private static string BuildUpgradeDetails(ManaColor color, CrystalPrototypeConfig.CrystalLevelData currentData, CrystalPrototypeConfig.CrystalLevelData nextData)
         {
             var builder = new StringBuilder();
-            builder.Append($"Damage <color=#82D862>{currentData.Damage}</color> -> <color=#82D862>{nextData.Damage}</color>\n");
-            builder.Append($"Regen <color=#82D862>{currentData.GenerationPerSecond:0.##}</color> -> <color=#82D862>{nextData.GenerationPerSecond:0.##}</color>\n");
-            builder.Append($"Cap <color=#82D862>{currentData.ManaCap}</color> -> <color=#82D862>{nextData.ManaCap}</color>");
+            var valueColor = GetCrystalValueColorTag(color);
+            builder.Append($"Damage {valueColor}{currentData.Damage}</color> -> {valueColor}{nextData.Damage}</color>\n");
+            builder.Append($"Regen {valueColor}{currentData.GenerationPerSecond:0.##}</color> -> {valueColor}{nextData.GenerationPerSecond:0.##}</color>\n");
+            builder.Append($"Cap {valueColor}{currentData.ManaCap}</color> -> {valueColor}{nextData.ManaCap}</color>");
             return builder.ToString();
+        }
+
+        private static string GetCrystalValueColorTag(ManaColor color)
+        {
+            return color switch
+            {
+                ManaColor.Red => "<color=#F25656>",
+                ManaColor.Green => "<color=#62D46A>",
+                ManaColor.Blue => "<color=#64A6FF>",
+                ManaColor.Yellow => "<color=#E3C94D>",
+                ManaColor.Magenta => "<color=#D66AE8>",
+                ManaColor.Cyan => "<color=#61D5E5>",
+                ManaColor.White => "<color=#F2EEE0>",
+                _ => "<color=#FFFFFF>"
+            };
         }
 
         private RectTransform CreatePopupPanel(out Button overlayButton)
@@ -937,7 +1029,7 @@ namespace RainbowTower.CrystalSystem
             panel.pivot = new Vector2(0.5f, 0.5f);
             panel.sizeDelta = new Vector2(520f, 620f);
             panel.anchoredPosition = Vector2.zero;
-            panel.localScale = Vector3.one;
+            panel.localScale = Vector3.one * 1.5f;
 
             var panelImage = panelObject.GetComponent<Image>();
             panelImage.sprite = mainUiProvider != null ? mainUiProvider.PopupBackgroundSprite : null;
@@ -964,7 +1056,6 @@ namespace RainbowTower.CrystalSystem
 
             var iconImage = iconObject.GetComponent<Image>();
             iconImage.sprite = iconSprite;
-            iconImage.color = Color.white;
             iconImage.preserveAspect = true;
             iconImage.raycastTarget = false;
         }
@@ -1072,17 +1163,5 @@ namespace RainbowTower.CrystalSystem
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 

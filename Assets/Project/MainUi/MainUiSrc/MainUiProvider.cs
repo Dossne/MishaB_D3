@@ -24,7 +24,6 @@ namespace RainbowTower.MainUi
         private const float TopHudHeight = 150f;
         private const float GameFieldHeight = 1080f;
         private const float ShelfZoneHeight = ReferenceHeight - GameFieldHeight - TopHudHeight;
-        private const float ShelfTitleHeight = 72f;
         private const float ShelfSpacing = 12f;
         private const float CrystalShelfPanelHeight = 755f;
         private const float CrystalSpendTextLifetime = 0.55f;
@@ -425,10 +424,22 @@ namespace RainbowTower.MainUi
             var existingShelfPanel = hudParent.Find("CrystalShelfPanel") as RectTransform;
             if (existingShelfPanel != null)
             {
+                var existingTitle = existingShelfPanel.Find("ShelfTitle");
+                if (existingTitle != null)
+                {
+                    Destroy(existingTitle.gameObject);
+                }
+
+                var existingCheat = existingShelfPanel.Find("UnlockAllCheatButton");
+                if (existingCheat != null)
+                {
+                    Destroy(existingCheat.gameObject);
+                }
+
                 ApplyCrystalShelfLayout(existingShelfPanel);
                 ApplyCrystalShelfBackground(existingShelfPanel);
                 RebuildCrystalRows(existingShelfPanel);
-                unlockAllCrystalsCheatButton = FindButton(hudParent, "CrystalShelfPanel/UnlockAllCheatButton");
+                unlockAllCrystalsCheatButton = null;
                 return;
             }
 
@@ -442,52 +453,26 @@ namespace RainbowTower.MainUi
                 new Vector2(-OuterMargin, OuterMargin + ShelfZoneHeight));
             ApplyCrystalShelfLayout(shelfPanel);
             ApplyCrystalShelfBackground(shelfPanel);
-
-            CreateAnchoredText(
-                "ShelfTitle",
-                shelfPanel,
-                "Crystal Shelf",
-                38f,
-                new Vector2(0f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(20f, -(20f + ShelfTitleHeight)),
-                new Vector2(-20f, -20f));
-
-            var cheatButtonTransform = CreatePanel(
-                "UnlockAllCheatButton",
-                shelfPanel,
-                new Color(0.94f, 0.72f, 0.28f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(-250f, -(18f + ShelfTitleHeight)),
-                new Vector2(-20f, -18f));
-            unlockAllCrystalsCheatButton = cheatButtonTransform.gameObject.AddComponent<Button>();
-            var cheatLabel = CreateAnchoredText(
-                "Label",
-                cheatButtonTransform,
-                "Unlock All",
-                26f,
-                Vector2.zero,
-                Vector2.one,
-                new Vector2(0f, 0f),
-                new Vector2(0f, 0f));
-            cheatLabel.color = new Color(0.2f, 0.12f, 0.06f, 1f);
+            unlockAllCrystalsCheatButton = null;
 
             var rowsObject = new GameObject("ShelfRows", typeof(RectTransform));
             var rowsTransform = (RectTransform)rowsObject.transform;
             rowsTransform.SetParent(shelfPanel, false);
             rowsTransform.anchorMin = new Vector2(0f, 0f);
             rowsTransform.anchorMax = new Vector2(1f, 1f);
-            rowsTransform.offsetMin = new Vector2(20f, 20f);
-            rowsTransform.offsetMax = new Vector2(-20f, -(ShelfTitleHeight + 34f));
+            rowsTransform.offsetMin = new Vector2(20f, 80f);
+            rowsTransform.offsetMax = new Vector2(-20f, -70f);
             rowsTransform.localScale = Vector3.one;
 
             var rowsLayout = rowsTransform.gameObject.AddComponent<VerticalLayoutGroup>();
             rowsLayout.padding = new RectOffset(0, 0, 0, 0);
-            rowsLayout.spacing = ShelfSpacing;
+            rowsLayout.spacing = 0f;
             rowsLayout.childAlignment = TextAnchor.UpperCenter;
+            rowsLayout.reverseArrangement = false;
             rowsLayout.childControlWidth = true;
             rowsLayout.childControlHeight = true;
+            rowsLayout.childScaleWidth = false;
+            rowsLayout.childScaleHeight = false;
             rowsLayout.childForceExpandWidth = true;
             rowsLayout.childForceExpandHeight = true;
 
@@ -509,16 +494,19 @@ namespace RainbowTower.MainUi
             rowsTransform.SetParent(shelfPanel, false);
             rowsTransform.anchorMin = new Vector2(0f, 0f);
             rowsTransform.anchorMax = new Vector2(1f, 1f);
-            rowsTransform.offsetMin = new Vector2(20f, 20f);
-            rowsTransform.offsetMax = new Vector2(-20f, -(ShelfTitleHeight + 34f));
+            rowsTransform.offsetMin = new Vector2(20f, 80f);
+            rowsTransform.offsetMax = new Vector2(-20f, -70f);
             rowsTransform.localScale = Vector3.one;
 
             var rowsLayout = rowsTransform.gameObject.AddComponent<VerticalLayoutGroup>();
             rowsLayout.padding = new RectOffset(0, 0, 0, 0);
-            rowsLayout.spacing = ShelfSpacing;
+            rowsLayout.spacing = 0f;
             rowsLayout.childAlignment = TextAnchor.UpperCenter;
+            rowsLayout.reverseArrangement = false;
             rowsLayout.childControlWidth = true;
             rowsLayout.childControlHeight = true;
+            rowsLayout.childScaleWidth = false;
+            rowsLayout.childScaleHeight = false;
             rowsLayout.childForceExpandWidth = true;
             rowsLayout.childForceExpandHeight = true;
 
@@ -657,7 +645,7 @@ namespace RainbowTower.MainUi
             magentaCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/MiddleRow/MagentaSlot/ManaLabel");
             cyanCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/MiddleRow/CyanSlot/ManaLabel");
             whiteCrystalLabel = FindText(hudParent, "CrystalShelfPanel/ShelfRows/BottomRow/WhiteSlot/ManaLabel");
-            unlockAllCrystalsCheatButton = FindButton(hudParent, "CrystalShelfPanel/UnlockAllCheatButton");
+            unlockAllCrystalsCheatButton = null;
         }
 
         private RectTransform CreatePanel(
@@ -982,23 +970,4 @@ namespace RainbowTower.MainUi
 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
